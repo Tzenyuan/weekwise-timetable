@@ -74,6 +74,13 @@
       .theme-picker label { font-size: 11px; }
       .theme-picker select { min-width: 105px; padding: 8px 28px 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); font-size: 11px; }
       .avatar { width: 34px; height: 34px; border-radius: 50%; background: #e9d8c5; display: grid; place-items: center; color: #76563e; font-weight: 700; }
+      .app-tabs { display: flex; gap: 6px; padding: 18px 0 0; border-bottom: 1px solid var(--line); }
+      .app-tab { position: relative; padding: 11px 14px; border: 0; border-radius: 9px 9px 0 0; background: transparent; color: var(--muted); font-size: 12px; font-weight: 700; transition: color .2s, background .2s; }
+      .app-tab:hover { background: color-mix(in srgb, var(--green) 7%, transparent); color: var(--ink); }
+      .app-tab[aria-selected="true"] { color: var(--green); }
+      .app-tab[aria-selected="true"]::after { position: absolute; right: 12px; bottom: -1px; left: 12px; height: 2px; background: var(--green); content: ""; animation: tab-in .25s ease both; }
+      .app-page[hidden] { display: none; }
+      .app-page { animation: page-in .32s cubic-bezier(.2,.8,.2,1) both; }
       .hero { display: flex; justify-content: space-between; align-items: end; padding: 42px 0 27px; }
       .eyebrow { margin: 0 0 10px; color: var(--green); text-transform: uppercase; letter-spacing: 1.6px; font-size: 10px; font-weight: 700; }
       h1 { margin: 0; font: 700 clamp(30px, 4vw, 42px)/1.1 "Manrope", sans-serif; letter-spacing: -1.8px; }
@@ -93,6 +100,11 @@
       .schedule-panel, .form-panel, .summary-card { background: var(--paper); border: 1px solid var(--panel-border); border-radius: 16px; box-shadow: var(--shadow); }
       .schedule-panel { min-width: 0; overflow: hidden; }
       .schedule-toolbar { min-height: 66px; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }
+      .schedule-toolbar-left, .week-nav { display: flex; align-items: center; gap: 10px; }
+      .week-label { white-space: nowrap; }
+      .week-nav { gap: 6px; }
+      .today-button { padding: 7px 9px; border: 0; border-radius: 7px; background: transparent; color: var(--green); font-size: 11px; font-weight: 700; }
+      .today-button:hover { background: color-mix(in srgb, var(--green) 8%, transparent); }
       .week-label { font: 700 15px "Manrope", sans-serif; }
       .weekend-toggle { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
       .weekend-toggle input { width: 15px; height: 15px; margin: 0; accent-color: var(--green); }
@@ -102,6 +114,8 @@
       .timetable { min-width: 690px; }
       .day-headings { display: grid; grid-template-columns: 57px repeat(5, minmax(105px, 1fr)); border-bottom: 1px solid var(--line); }
       .day-heading { padding: 16px 5px; text-align: center; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .9px; text-transform: uppercase; }
+      .day-heading strong { display: block; margin-top: 5px; color: var(--ink); font: 700 15px "Manrope", sans-serif; letter-spacing: 0; }
+      .day-heading.today strong { color: white; background: var(--green); width: 27px; height: 27px; margin: 2px auto 0; border-radius: 50%; display: grid; place-items: center; }
       .calendar-body { display: grid; grid-template-columns: 57px repeat(5, minmax(105px, 1fr)); position: relative; }
       .time-column, .day-column { height: 624px; position: relative; }
       .time-label { height: 52px; padding: 0 7px; position: relative; top: -7px; text-align: right; color: #969990; font-size: 10px; }
@@ -139,6 +153,54 @@
       }
       .field input:focus, .field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 15%, transparent); }
       .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .course-color-picker { display: flex; align-items: center; gap: 10px; }
+      .course-color-picker input { width: 42px; min-width: 42px; height: 38px; padding: 4px; cursor: pointer; }
+      .course-color-help { color: var(--muted); font-size: 10px; }
+      .semester-panel { margin-bottom: 16px; padding: 17px 19px; border: 1px solid var(--panel-border); border-radius: 14px; background: var(--paper); box-shadow: var(--shadow); }
+      .semester-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 13px; }
+      .semester-heading { margin: 0; font: 700 14px "Manrope", sans-serif; }
+      .semester-controls { display: flex; gap: 10px; align-items: end; }
+      .semester-field { display: grid; gap: 5px; color: var(--muted); font-size: 10px; font-weight: 600; }
+      .semester-field input { width: 140px; height: 34px; padding: 0 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); font-size: 11px; }
+      .semester-field.weeks input { width: 76px; }
+      .semester-progress-row { display: flex; align-items: center; gap: 12px; }
+      .semester-progress { height: 8px; flex: 1; overflow: hidden; border-radius: 99px; background: color-mix(in srgb, var(--green) 12%, var(--paper)); }
+      .semester-progress-fill { height: 100%; width: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), color-mix(in srgb, var(--green) 65%, var(--lime))); transition: width .55s cubic-bezier(.2,.8,.2,1); }
+      .semester-progress-label { min-width: 175px; color: var(--muted); font-size: 10px; text-align: right; }
+      .study-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+      .study-card { padding: 21px; border: 1px solid var(--panel-border); border-radius: 16px; background: var(--paper); box-shadow: var(--shadow); animation: card-in .4s cubic-bezier(.2,.8,.2,1) both; }
+      .study-card:nth-child(2) { animation-delay: 55ms; }
+      .study-card:nth-child(3) { animation-delay: 110ms; }
+      .study-card.wide { grid-column: 1 / -1; }
+      .study-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
+      .study-card-heading h2 { margin: 0; font: 700 16px "Manrope", sans-serif; }
+      .study-card-heading p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+      .study-symbol { color: var(--green); font-size: 21px; }
+      .study-form { display: flex; gap: 9px; flex-wrap: wrap; }
+      .study-form input { min-width: 0; flex: 1; height: 40px; padding: 0 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); font-size: 12px; }
+      .study-form input[type="date"] { flex: 0 1 150px; }
+      .exam-list, .todo-list { display: grid; gap: 9px; margin-top: 14px; }
+      .exam-item, .todo-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; animation: card-in .28s ease both; }
+      .exam-title, .todo-title { font-size: 12px; font-weight: 700; }
+      .exam-date, .todo-deadline { margin-top: 4px; color: var(--muted); font-size: 10px; }
+      .exam-countdown { flex: 0 0 auto; color: var(--green); font: 800 14px "Manrope", sans-serif; text-align: right; }
+      .exam-remove, .todo-remove { width: 28px; height: 28px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font-size: 17px; }
+      .exam-remove:hover, .todo-remove:hover { background: color-mix(in srgb, #c45a4f 10%, transparent); color: #b14c42; }
+      .study-empty { margin: 13px 0 0; color: var(--muted); font-size: 11px; }
+      .pomodoro-content { display: grid; justify-items: center; gap: 16px; }
+      .pomodoro-clock { --timer-progress: 0%; display: grid; place-items: center; width: 176px; aspect-ratio: 1; border-radius: 50%; background: conic-gradient(var(--green) var(--timer-progress), color-mix(in srgb, var(--green) 12%, var(--paper)) 0); transition: background .25s; }
+      .pomodoro-clock-inner { display: grid; place-content: center; width: calc(100% - 14px); aspect-ratio: 1; border-radius: 50%; background: var(--paper); text-align: center; }
+      .pomodoro-time { font: 800 39px "Manrope", sans-serif; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+      .pomodoro-mode { margin-top: 4px; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+      .pomodoro-controls { display: flex; gap: 9px; }
+      .pomodoro-settings { display: flex; gap: 12px; color: var(--muted); font-size: 10px; }
+      .pomodoro-settings label { display: flex; align-items: center; gap: 5px; }
+      .pomodoro-settings input { width: 48px; padding: 5px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
+      .todo-item { justify-content: start; }
+      .todo-item.completed .todo-title { color: var(--muted); text-decoration: line-through; }
+      .todo-item input[type="checkbox"] { width: 16px; height: 16px; flex: 0 0 auto; accent-color: var(--green); }
+      .todo-copy { min-width: 0; flex: 1; }
+      .todo-overdue { color: #b14c42; font-weight: 700; }
       .form-submit { width: 100%; margin-top: 2px; }
       .form-hint { margin: 11px 0 0; color: #95988f; font-size: 10px; line-height: 1.5; }
       .calendar-hint { margin: 9px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
@@ -154,12 +216,21 @@
       }
       .toast.visible { opacity: 1; transform: translate(-50%, 0); }
       @keyframes card-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      @keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes tab-in { from { transform: scaleX(.5); opacity: .5; } to { transform: scaleX(1); opacity: 1; } }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
       }
+      @media (max-width: 1150px) {
+        .hero { display: block; }
+        .hero-actions { margin-top: 18px; }
+        .workspace { grid-template-columns: minmax(0, 1fr); }
+        .sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .semester-panel, .form-panel { grid-column: 1 / -1; }
+      }
       @media (max-width: 980px) {
         .app-shell { padding: 0 24px 35px; }
-        .workspace { grid-template-columns: minmax(0, 1fr) 285px; gap: 14px; }
+        .workspace { gap: 14px; }
         .form-panel { padding: 17px; }
         .hero { padding-top: 34px; }
       }
@@ -174,6 +245,13 @@
         .workspace { grid-template-columns: 1fr; }
         .sidebar { grid-template-columns: 1fr; }
         .schedule-toolbar { padding: 0 14px; }
+        .semester-header { align-items: start; flex-direction: column; }
+        .semester-controls { width: 100%; }
+        .semester-field:not(.weeks) { flex: 1; }
+        .semester-field input { width: 100%; }
+        .semester-progress-label { min-width: auto; }
+        .study-grid { grid-template-columns: 1fr; }
+        .study-card.wide { grid-column: auto; }
       }
       @media (max-width: 430px) {
         .app-shell { padding-left: 10px; padding-right: 10px; }
@@ -187,6 +265,7 @@
         body { min-width: 0; background: white; color: #222; font-family: Arial, sans-serif; }
         .app-shell { max-width: none; padding: 0; }
         .topbar { height: auto; padding: 0 0 8px; border-bottom: 1px solid #ccc; }
+        .app-tabs { display: none !important; }
         .topbar-right, .hero-actions, .sidebar, .schedule-toolbar, .empty-state, .toast { display: none !important; }
         .hero { padding: 10px 0; }
         .eyebrow { margin-bottom: 3px; font-size: 8pt; }
@@ -202,6 +281,7 @@
         .time-label { height: 13mm; top: -2mm; padding-right: 2mm; color: #555; font-size: 7pt; }
         .day-column { background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(13mm - 1px), #ddd calc(13mm - 1px), #ddd 13mm); }
         .course-card { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+        .day-heading.today strong { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
       }
     </style>
   </head>
@@ -222,7 +302,12 @@
         </div>
       </header>
 
+      <nav class="app-tabs" role="tablist" aria-label="Weekwise sections">
+        <button class="app-tab" id="planner-tab" type="button" role="tab" aria-controls="planner-page" aria-selected="true">Timetable</button>
+        <button class="app-tab" id="study-tab" type="button" role="tab" aria-controls="study-page" aria-selected="false">Study hub</button>
+      </nav>
       <main>
+        <div class="app-page" id="planner-page" role="tabpanel" aria-labelledby="planner-tab">
         <section class="hero">
           <div>
             <p class="eyebrow">Your week, in sync</p>
@@ -239,7 +324,14 @@
         <div class="workspace">
           <section class="schedule-panel" aria-label="Weekly timetable">
             <div class="schedule-toolbar">
-              <div class="week-label">Your weekly schedule</div>
+              <div class="schedule-toolbar-left">
+                <div class="week-nav">
+                  <button class="nav-button" id="previous-week" type="button" aria-label="Previous week">‹</button>
+                  <button class="nav-button" id="next-week" type="button" aria-label="Next week">›</button>
+                  <button class="today-button" id="today-button" type="button">Today</button>
+                </div>
+                <div class="week-label" id="week-label"></div>
+              </div>
               <label class="weekend-toggle" for="weekend-toggle">
                 <input type="checkbox" id="weekend-toggle" />
                 <span>Include weekends</span>
@@ -256,6 +348,25 @@
           </section>
 
           <aside class="sidebar">
+            <section class="semester-panel" aria-label="Semester dates and progress">
+              <div class="semester-header">
+                <h2 class="semester-heading">Semester progress</h2>
+                <div class="semester-controls">
+                  <label class="semester-field" for="semester-start">Starts
+                    <input type="date" id="semester-start" />
+                  </label>
+                  <label class="semester-field weeks" for="semester-weeks">Weeks
+                    <input type="number" id="semester-weeks" min="1" max="52" value="16" />
+                  </label>
+                </div>
+              </div>
+              <div class="semester-progress-row">
+                <div class="semester-progress" id="semester-progress" role="progressbar" aria-label="Semester remaining" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+                  <div class="semester-progress-fill" id="semester-progress-fill"></div>
+                </div>
+                <div class="semester-progress-label" id="semester-progress-label"></div>
+              </div>
+            </section>
             <section class="form-panel">
               <div class="panel-heading">
                 <h2 id="form-title">Add a course</h2><span class="heading-icon">✳</span>
@@ -266,7 +377,14 @@
                   <input id="course-name" name="name" placeholder="e.g. Introduction to Design" maxlength="48" required />
                 </div>
                 <div class="field">
-                  <label for="course-venue">Venue</label>
+                  <label for="course-format">Class format</label>
+                  <select id="course-format" name="format">
+                    <option value="physical">In person</option>
+                    <option value="online">Online</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="course-venue" id="venue-label">Venue</label>
                   <input id="course-venue" name="venue" placeholder="e.g. Arts Building · 204" maxlength="48" required />
                 </div>
                 <div class="field">
@@ -287,6 +405,13 @@
                     <input id="course-end" name="end" type="time" min="08:00" max="20:00" value="10:00" required />
                   </div>
                 </div>
+                <div class="field">
+                  <label for="course-color">Course color</label>
+                  <div class="course-color-picker">
+                    <input id="course-color" type="color" value="#668b70" aria-label="Choose course color" />
+                    <span class="course-color-help">Choose a color for this course.</span>
+                  </div>
+                </div>
                 <p class="form-error" id="form-error" role="alert"></p>
                 <button class="button button-primary form-submit" type="submit" id="submit-button">Add to timetable <span class="button-icon">↗</span></button>
                 <button class="button button-secondary form-submit" type="button" id="delete-course-button" hidden>Remove course</button>
@@ -304,6 +429,53 @@
             <p class="calendar-hint">Export a recurring .ics file to import into Google Calendar or Apple Calendar.</p>
           </aside>
         </div>
+        </div>
+
+        <section class="app-page" id="study-page" role="tabpanel" aria-labelledby="study-tab" hidden>
+          <div class="hero">
+            <div>
+              <p class="eyebrow">Make time for what matters</p>
+              <h1>Study hub</h1>
+              <p class="hero-copy">Keep exams, focused study sessions, and next steps in one place.</p>
+            </div>
+          </div>
+          <div class="study-grid">
+            <section class="study-card" aria-labelledby="exams-heading">
+              <div class="study-card-heading"><div><h2 id="exams-heading">Exam countdown</h2><p>A little notice makes a big difference.</p></div><span class="study-symbol">⌛</span></div>
+              <form id="exam-form" class="study-form">
+                <input id="exam-name" type="text" placeholder="Exam name" maxlength="60" aria-label="Exam name" required />
+                <input id="exam-date" type="date" aria-label="Exam date" required />
+                <button class="button button-primary" type="submit">Add exam</button>
+              </form>
+              <div class="exam-list" id="exam-list"></div>
+            </section>
+            <section class="study-card" aria-labelledby="pomodoro-heading">
+              <div class="study-card-heading"><div><h2 id="pomodoro-heading">Pomodoro timer</h2><p>Work in focused intervals, then take a breather.</p></div><span class="study-symbol">◷</span></div>
+              <div class="pomodoro-content">
+                <div class="pomodoro-clock" id="pomodoro-clock" role="timer" aria-live="off">
+                  <div class="pomodoro-clock-inner"><div class="pomodoro-time" id="pomodoro-time">25:00</div><div class="pomodoro-mode" id="pomodoro-mode">Focus time</div></div>
+                </div>
+                <div class="pomodoro-controls">
+                  <button class="button button-primary" type="button" id="pomodoro-toggle">Start focus</button>
+                  <button class="button button-secondary" type="button" id="pomodoro-reset">Reset</button>
+                </div>
+                <div class="pomodoro-settings">
+                  <label>Focus <input id="focus-minutes" type="number" min="1" max="90" value="25" aria-label="Focus minutes" /> min</label>
+                  <label>Break <input id="break-minutes" type="number" min="1" max="30" value="5" aria-label="Break minutes" /> min</label>
+                </div>
+              </div>
+            </section>
+            <section class="study-card wide" aria-labelledby="todos-heading">
+              <div class="study-card-heading"><div><h2 id="todos-heading">Study to-do list</h2><p>Choose a deadline and check things off as you go.</p></div><span class="study-symbol">✓</span></div>
+              <form id="todo-form" class="study-form">
+                <input id="todo-title-input" type="text" placeholder="What needs to get done?" maxlength="100" aria-label="Task" required />
+                <input id="todo-deadline-input" type="date" aria-label="Task deadline" required />
+                <button class="button button-primary" type="submit">Add task</button>
+              </form>
+              <div class="todo-list" id="todo-list"></div>
+            </section>
+          </div>
+        </section>
       </main>
     </div>
     <div class="toast" id="toast" role="status"></div>
@@ -319,6 +491,14 @@
         ];
         const storageKey = "weekwise-courses-v1";
         const weekendStorageKey = "weekwise-weekends-v1";
+        const semesterStorageKey = "weekwise-semester-v1";
+        const examsStorageKey = "weekwise-exams-v1";
+        const todosStorageKey = "weekwise-todos-v1";
+        const courseColorInput = document.getElementById("course-color");
+        const courseFormat = document.getElementById("course-format");
+        const venueLabel = document.getElementById("venue-label");
+        const semesterStartInput = document.getElementById("semester-start");
+        const semesterWeeksInput = document.getElementById("semester-weeks");
         const calendarBody = document.getElementById("calendar-body");
         const headings = document.getElementById("day-headings");
         const form = document.getElementById("course-form");
@@ -338,9 +518,21 @@
         let toastTimer;
         let dragState = null;
         let suppressCourseClick = false;
+        let weekOffset = 0;
+        let exams = loadCollection(examsStorageKey);
+        let todos = loadCollection(todosStorageKey);
+        let timerMode = "focus";
+        let timerRunning = false;
+        let timerRemaining = 25 * 60;
+        let timerDeadline = 0;
+        let timerInterval = null;
         const savedTheme = readPreference("weekwise-theme-v1");
         const weekendPreference = readPreference(weekendStorageKey);
+        const semesterSettings = loadSemesterSettings();
         weekendToggle.checked = weekendPreference === "true";
+        semesterStartInput.value = semesterSettings.start;
+        semesterWeeksInput.value = String(semesterSettings.weeks);
+        courseColorInput.value = courseColorInput.value || palette[0][1];
         if (["sage", "ocean", "lavender", "midnight"].includes(savedTheme)) {
           document.body.dataset.theme = savedTheme;
           themeSelect.value = savedTheme;
@@ -359,15 +551,61 @@
             return [];
           }
         }
+        function loadCollection(key) {
+          try {
+            const saved = JSON.parse(localStorage.getItem(key) || "[]");
+            return Array.isArray(saved) ? saved : [];
+          } catch (storageError) {
+            console.error(`Could not load saved data for ${key}.`, storageError);
+            return [];
+          }
+        }
+        function localDateString(date) {
+          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+        }
+        function dateOrdinal(date) {
+          return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
+        }
+        function parseLocalDate(value) {
+          if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+          const [year, month, day] = value.split("-").map(Number);
+          const date = new Date(year, month - 1, day);
+          return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day ? date : null;
+        }
+        function loadSemesterSettings() {
+          const today = new Date();
+          const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7));
+          try {
+            const saved = JSON.parse(localStorage.getItem(semesterStorageKey) || "null");
+            const start = parseLocalDate(saved?.start);
+            const weeks = Number(saved?.weeks);
+            return { start: start ? localDateString(start) : localDateString(monday), weeks: Number.isInteger(weeks) && weeks >= 1 && weeks <= 52 ? weeks : 16 };
+          } catch (storageError) {
+            console.error("Could not load semester settings.", storageError);
+            return { start: localDateString(monday), weeks: 16 };
+          }
+        }
         function normalizeCourses(saved) {
-          return Array.isArray(saved) ? saved.filter(item =>
+          if (!Array.isArray(saved)) return [];
+          const normalized = saved.filter(item =>
               item && typeof item.id === "string" && typeof item.name === "string" &&
               typeof item.venue === "string" && Number.isInteger(item.day) &&
               item.day >= 0 && item.day < days.length && validTime(item.start) && validTime(item.end) &&
               minutes(item.start) >= 8 * 60 && minutes(item.end) <= 20 * 60 && minutes(item.end) > minutes(item.start)
-            ) : [];
+            ).map(item => ({
+              ...item,
+              format: item.format === "online" ? "online" : "physical",
+              color: validColor(item.color) ? item.color : colorForName(item.name)
+            }));
+          const colorsByName = new Map();
+          return normalized.map(course => {
+            const key = course.name.trim().toLocaleLowerCase();
+            if (!colorsByName.has(key)) colorsByName.set(key, course.color);
+            return { ...course, color: colorsByName.get(key) };
+          });
         }
         function validTime(value) { return typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(value); }
+        function validColor(value) { return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value); }
         function setSaveStatus(state, label) {
           autoSaveStatus.dataset.state = state;
           autoSaveLabel.textContent = label;
@@ -392,24 +630,90 @@
             showToast("Could not save your preference in this browser.");
           }
         }
+        function saveCollection(key, collection) {
+          try {
+            localStorage.setItem(key, JSON.stringify(collection));
+            setSaveStatus("saved", "Auto-saved");
+          } catch (storageError) {
+            console.error(`Could not save data for ${key}.`, storageError);
+            setSaveStatus("error", "Save failed");
+            showToast("Could not save this study data in your browser.");
+          }
+        }
+        function saveSemesterSettings() {
+          const settings = { start: semesterStartInput.value, weeks: Number(semesterWeeksInput.value) };
+          if (!parseLocalDate(settings.start) || !Number.isInteger(settings.weeks) || settings.weeks < 1 || settings.weeks > 52) return;
+          try {
+            localStorage.setItem(semesterStorageKey, JSON.stringify(settings));
+            setSaveStatus("saved", "Auto-saved");
+          } catch (storageError) {
+            console.error("Could not save semester settings.", storageError);
+            setSaveStatus("error", "Save failed");
+            showToast("Could not save your semester settings.");
+          }
+          renderSemesterProgress();
+          renderWeek();
+        }
         function minutes(value) {
           const [hours, mins] = value.split(":").map(Number);
           return hours * 60 + mins;
         }
-        function courseColor(name) {
+        function colorForName(name) {
           let hash = 0;
           for (const character of name.trim().toLocaleLowerCase()) hash = Math.imul(hash, 31) + character.charCodeAt(0) | 0;
-          return palette[Math.abs(hash) % palette.length];
+          return palette[Math.abs(hash) % palette.length][1];
+        }
+        function colorForCourse(course) {
+          return validColor(course.color) ? course.color : colorForName(course.name);
+        }
+        function selectedColorForName(name, fallback) {
+          const normalizedName = name.trim().toLocaleLowerCase();
+          return courses.find(course => course.name.trim().toLocaleLowerCase() === normalizedName)?.color || fallback;
+        }
+        function weekDate(dayIndex) {
+          const now = new Date();
+          const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7) + weekOffset * 7);
+          monday.setDate(monday.getDate() + dayIndex);
+          return monday;
+        }
+        function renderSemesterProgress() {
+          const start = parseLocalDate(semesterStartInput.value);
+          const weeks = Number(semesterWeeksInput.value);
+          if (!start || !Number.isInteger(weeks) || weeks < 1 || weeks > 52) return;
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const elapsedDays = dateOrdinal(today) - dateOrdinal(start);
+          const totalDays = weeks * 7;
+          const remaining = Math.max(0, Math.min(100, Math.round((totalDays - elapsedDays) / totalDays * 100)));
+          const elapsedWeeks = Math.max(0, Math.floor(elapsedDays / 7) + 1);
+          const label = elapsedDays < 0
+            ? `Starts in ${Math.ceil(-elapsedDays / 7)} week${Math.ceil(-elapsedDays / 7) === 1 ? "" : "s"} · ${remaining}% left`
+            : elapsedDays >= totalDays
+              ? "Semester complete · 0% left"
+              : `Week ${elapsedWeeks} of ${weeks} · ${remaining}% left`;
+          document.getElementById("semester-progress-fill").style.width = `${remaining}%`;
+          document.getElementById("semester-progress").setAttribute("aria-valuenow", String(remaining));
+          document.getElementById("semester-progress-label").textContent = label;
         }
         function renderWeek() {
           const visibleDayCount = weekendToggle.checked ? days.length : 5;
           const visibleCourses = courses.filter(course => course.day < visibleDayCount);
+          const firstDate = weekDate(0);
+          const lastDate = weekDate(visibleDayCount - 1);
+          const dateFormat = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
+          const dayNumberFormat = new Intl.DateTimeFormat(undefined, { day: "numeric" });
+          document.getElementById("week-label").textContent = `${dateFormat.format(firstDate)} – ${dateFormat.format(lastDate)}`;
           const columnsStyle = `57px repeat(${visibleDayCount}, minmax(105px, 1fr))`;
           headings.style.gridTemplateColumns = columnsStyle;
+          headings.style.setProperty("--visible-day-count", visibleDayCount);
           calendarBody.style.gridTemplateColumns = columnsStyle;
           calendarBody.style.setProperty("--visible-day-count", visibleDayCount);
           document.querySelector(".timetable").style.minWidth = `${57 + visibleDayCount * 105}px`;
-          headings.innerHTML = '<div></div>' + days.slice(0, visibleDayCount).map(day => `<div class="day-heading">${day}</div>`).join("");
+          headings.innerHTML = '<div></div>' + days.slice(0, visibleDayCount).map((day, index) => {
+            const date = weekDate(index);
+            const isToday = date.toDateString() === new Date().toDateString();
+            return `<div class="day-heading${isToday ? " today" : ""}">${day}<strong>${dayNumberFormat.format(date)}</strong></div>`;
+          }).join("");
           calendarBody.querySelectorAll(".day-column").forEach(column => column.remove());
           const timeColumn = document.getElementById("time-column");
           timeColumn.innerHTML = Array.from({ length: 12 }, (_, i) => {
@@ -426,17 +730,18 @@
               const end = minutes(course.end);
               const top = (start - 8 * 60) / 60 * 52;
               const height = Math.max((end - start) / 60 * 52 - 4, 36);
-              const color = courseColor(course.name);
+              const color = colorForCourse(course);
               const card = document.createElement("button");
               card.type = "button";
               card.className = "course-card" + (height < 58 ? " compact" : "");
-              card.style.cssText = `top:${top}px;height:${height}px;--course-bg:${color[0]};--course-color:${color[1]};--course-text:${color[2]}`;
+              card.style.cssText = `top:${top}px;height:${height}px;--course-bg:color-mix(in srgb, ${color} 19%, var(--paper));--course-color:${color};--course-text:var(--ink)`;
               card.style.animationDelay = `${dayCourses.indexOf(course) * 35}ms`;
               card.dataset.courseId = course.id;
-              card.setAttribute("aria-label", `${course.name}, ${course.start} to ${course.end}, ${course.venue}. Select to edit.`);
+              const formatLabel = course.format === "online" ? "Online" : "In person";
+              card.setAttribute("aria-label", `${course.name}, ${formatLabel}, ${course.start} to ${course.end}, ${course.venue}. Select to edit.`);
               card.innerHTML = `<div class="course-name"></div><div class="course-meta"></div>`;
               card.querySelector(".course-name").textContent = course.name;
-              card.querySelector(".course-meta").textContent = `${formatTime(course.start)} – ${formatTime(course.end)} · ${course.venue}`;
+              card.querySelector(".course-meta").textContent = `${formatLabel} · ${formatTime(course.start)} – ${formatTime(course.end)} · ${course.venue}`;
               card.addEventListener("click", () => {
                 if (suppressCourseClick) return;
                 editCourse(course.id);
@@ -468,11 +773,153 @@
           clearTimeout(toastTimer);
           toastTimer = setTimeout(() => toast.classList.remove("visible"), 2500);
         }
+        function showPage(page) {
+          const planner = page === "planner";
+          document.getElementById("planner-page").hidden = !planner;
+          document.getElementById("study-page").hidden = planner;
+          document.getElementById("planner-tab").setAttribute("aria-selected", String(planner));
+          document.getElementById("study-tab").setAttribute("aria-selected", String(!planner));
+        }
+        function renderExams() {
+          const list = document.getElementById("exam-list");
+          list.replaceChildren();
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const validExams = exams.filter(exam => exam && typeof exam.id === "string" && typeof exam.name === "string" && parseLocalDate(exam.date))
+            .sort((a, b) => a.date.localeCompare(b.date));
+          if (!validExams.length) {
+            const empty = document.createElement("p");
+            empty.className = "study-empty";
+            empty.textContent = "No exams yet. Add one to start your countdown.";
+            list.appendChild(empty);
+            return;
+          }
+          validExams.forEach(exam => {
+            const examDate = parseLocalDate(exam.date);
+            const daysAway = dateOrdinal(examDate) - dateOrdinal(today);
+            const item = document.createElement("div");
+            item.className = "exam-item";
+            const copy = document.createElement("div");
+            copy.style.minWidth = "0";
+            copy.style.flex = "1";
+            const title = document.createElement("div");
+            title.className = "exam-title";
+            title.textContent = exam.name;
+            const date = document.createElement("div");
+            date.className = "exam-date";
+            date.textContent = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(examDate);
+            const countdown = document.createElement("div");
+            countdown.className = "exam-countdown";
+            countdown.textContent = daysAway === 0 ? "Today" : daysAway === 1 ? "Tomorrow" : daysAway > 0 ? `In ${daysAway} days` : `${Math.abs(daysAway)} days ago`;
+            const remove = document.createElement("button");
+            remove.className = "exam-remove";
+            remove.type = "button";
+            remove.textContent = "×";
+            remove.setAttribute("aria-label", `Remove ${exam.name}`);
+            remove.addEventListener("click", () => {
+              exams = exams.filter(item => item.id !== exam.id);
+              saveCollection(examsStorageKey, exams);
+              renderExams();
+            });
+            copy.append(title, date);
+            item.append(copy, countdown, remove);
+            list.appendChild(item);
+          });
+        }
+        function renderTodos() {
+          const list = document.getElementById("todo-list");
+          list.replaceChildren();
+          const validTodos = todos.filter(todo => todo && typeof todo.id === "string" && typeof todo.title === "string" && parseLocalDate(todo.deadline))
+            .sort((a, b) => Number(a.done) - Number(b.done) || a.deadline.localeCompare(b.deadline));
+          if (!validTodos.length) {
+            const empty = document.createElement("p");
+            empty.className = "study-empty";
+            empty.textContent = "Your list is clear. Add a task when you are ready.";
+            list.appendChild(empty);
+            return;
+          }
+          const today = localDateString(new Date());
+          validTodos.forEach(todo => {
+            const item = document.createElement("div");
+            item.className = `todo-item${todo.done ? " completed" : ""}`;
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = Boolean(todo.done);
+            checkbox.setAttribute("aria-label", `Mark ${todo.title} as ${todo.done ? "incomplete" : "complete"}`);
+            checkbox.addEventListener("change", () => {
+              todos = todos.map(entry => entry.id === todo.id ? { ...entry, done: checkbox.checked } : entry);
+              saveCollection(todosStorageKey, todos);
+              renderTodos();
+            });
+            const copy = document.createElement("div");
+            copy.className = "todo-copy";
+            const title = document.createElement("div");
+            title.className = "todo-title";
+            title.textContent = todo.title;
+            const deadline = document.createElement("div");
+            deadline.className = `todo-deadline${!todo.done && todo.deadline < today ? " todo-overdue" : ""}`;
+            const deadlineDate = parseLocalDate(todo.deadline);
+            deadline.textContent = `${!todo.done && todo.deadline < today ? "Overdue · " : "Due "}${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(deadlineDate)}`;
+            const remove = document.createElement("button");
+            remove.className = "todo-remove";
+            remove.type = "button";
+            remove.textContent = "×";
+            remove.setAttribute("aria-label", `Remove task ${todo.title}`);
+            remove.addEventListener("click", () => {
+              todos = todos.filter(entry => entry.id !== todo.id);
+              saveCollection(todosStorageKey, todos);
+              renderTodos();
+            });
+            copy.append(title, deadline);
+            item.append(checkbox, copy, remove);
+            list.appendChild(item);
+          });
+        }
+        function timerDuration(mode) {
+          const value = Number(document.getElementById(mode === "focus" ? "focus-minutes" : "break-minutes").value);
+          return Math.min(mode === "focus" ? 90 : 30, Math.max(1, Number.isFinite(value) ? value : mode === "focus" ? 25 : 5)) * 60;
+        }
+        function renderPomodoro() {
+          const minutes = Math.floor(timerRemaining / 60);
+          const seconds = timerRemaining % 60;
+          document.getElementById("pomodoro-time").textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+          document.getElementById("pomodoro-mode").textContent = timerMode === "focus" ? "Focus time" : "Break time";
+          document.getElementById("pomodoro-toggle").textContent = timerRunning ? "Pause" : timerRemaining === timerDuration(timerMode) ? `Start ${timerMode}` : "Resume";
+          const progress = Math.max(0, Math.min(100, (1 - timerRemaining / timerDuration(timerMode)) * 100));
+          document.getElementById("pomodoro-clock").style.setProperty("--timer-progress", `${progress}%`);
+        }
+        function stopPomodoroInterval() {
+          if (timerInterval !== null) clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        function tickPomodoro() {
+          timerRemaining = Math.max(0, Math.ceil((timerDeadline - Date.now()) / 1000));
+          if (timerRemaining === 0) {
+            timerRunning = false;
+            stopPomodoroInterval();
+            timerMode = timerMode === "focus" ? "break" : "focus";
+            timerRemaining = timerDuration(timerMode);
+            showToast(timerMode === "break" ? "Focus session complete. Take a break!" : "Break is over. Ready to focus?");
+          }
+          renderPomodoro();
+        }
+        function savePomodoroSettings() {
+          const focus = document.getElementById("focus-minutes");
+          const pause = document.getElementById("break-minutes");
+          focus.value = String(Math.min(90, Math.max(1, Number(focus.value) || 25)));
+          pause.value = String(Math.min(30, Math.max(1, Number(pause.value) || 5)));
+          timerRunning = false;
+          stopPomodoroInterval();
+          timerRemaining = timerDuration(timerMode);
+          renderPomodoro();
+        }
         function resetForm() {
           editingId = null;
           form.reset();
           courseStart.value = "09:00";
           courseEnd.value = "10:00";
+          courseColorInput.value = palette[0][1];
+          updateVenueField();
           document.getElementById("form-title").textContent = "Add a course";
           document.getElementById("submit-button").innerHTML = 'Add to timetable <span class="button-icon">↗</span>';
           document.getElementById("delete-course-button").hidden = true;
@@ -493,6 +940,9 @@
           courseDay.value = String(course.day);
           courseStart.value = course.start;
           courseEnd.value = course.end;
+          courseFormat.value = course.format || "physical";
+          courseColorInput.value = colorForCourse(course);
+          updateVenueField();
           document.getElementById("form-title").textContent = "Edit course";
           document.getElementById("submit-button").innerHTML = 'Save changes <span class="button-icon">↗</span>';
           document.getElementById("delete-course-button").hidden = false;
@@ -507,6 +957,11 @@
               option.textContent = weekendToggle.checked ? days[Number(option.value)] : `${days[Number(option.value)]} (enable weekends)`;
             }
           });
+        }
+        function updateVenueField() {
+          const online = courseFormat.value === "online";
+          venueLabel.textContent = online ? "Platform or meeting link" : "Venue";
+          courseVenue.placeholder = online ? "e.g. Zoom · course.example.edu" : "e.g. Arts Building · 204";
         }
         function setDragTarget(target) {
           calendarBody.querySelectorAll(".drop-target").forEach(column => column.classList.remove("drop-target"));
@@ -601,7 +1056,7 @@
               `RRULE:FREQ=WEEKLY;BYDAY=${dayCodes[course.day]}`,
               `SUMMARY:${icalEscape(course.name)}`,
               `LOCATION:${icalEscape(course.venue)}`,
-              `DESCRIPTION:${icalEscape(`Weekly class at ${course.venue}`)}`,
+              `DESCRIPTION:${icalEscape(`${course.format === "online" ? "Online class" : "In-person class"} at ${course.venue}`)}`,
               "END:VEVENT"
             );
           });
@@ -620,11 +1075,13 @@
           event.preventDefault();
           const name = courseName.value.trim();
           const venue = courseVenue.value.trim();
+          const format = courseFormat.value === "online" ? "online" : "physical";
+          const color = validColor(courseColorInput.value) ? courseColorInput.value : palette[0][1];
           const day = Number(courseDay.value);
           const start = courseStart.value;
           const end = courseEnd.value;
           if (!name || !venue) {
-            error.textContent = "Add a course name and venue to continue.";
+            error.textContent = format === "online" ? "Add a course name and online platform or meeting link to continue." : "Add a course name and venue to continue.";
             error.style.display = "block";
             return;
           }
@@ -652,9 +1109,13 @@
           }
           const wasEditing = Boolean(editingId);
           if (editingId) {
-            courses = courses.map(course => course.id === editingId ? { ...course, name, venue, day, start, end } : course);
+            const updatedName = name.toLocaleLowerCase();
+            courses = courses.map(course => {
+              if (course.id === editingId) return { ...course, name, venue, format, day, start, end, color };
+              return course.name.trim().toLocaleLowerCase() === updatedName ? { ...course, color } : course;
+            });
           } else {
-            courses.push({ id: crypto.randomUUID(), name, venue, day, start, end });
+            courses.push({ id: crypto.randomUUID(), name, venue, format, day, start, end, color: selectedColorForName(name, color) });
           }
           courses.sort((a, b) => a.day - b.day || minutes(a.start) - minutes(b.start));
           saveCourses();
@@ -672,6 +1133,55 @@
           savePreference(weekendStorageKey, String(weekendToggle.checked));
           renderWeek();
         });
+        courseFormat.addEventListener("change", updateVenueField);
+        [semesterStartInput, semesterWeeksInput].forEach(input => input.addEventListener("change", saveSemesterSettings));
+        document.getElementById("previous-week").addEventListener("click", () => { weekOffset--; renderWeek(); });
+        document.getElementById("next-week").addEventListener("click", () => { weekOffset++; renderWeek(); });
+        document.getElementById("today-button").addEventListener("click", () => { weekOffset = 0; renderWeek(); });
+        document.getElementById("planner-tab").addEventListener("click", () => showPage("planner"));
+        document.getElementById("study-tab").addEventListener("click", () => showPage("study"));
+        document.getElementById("exam-form").addEventListener("submit", event => {
+          event.preventDefault();
+          const name = document.getElementById("exam-name").value.trim();
+          const date = document.getElementById("exam-date").value;
+          if (!name || !parseLocalDate(date)) return;
+          exams.push({ id: crypto.randomUUID(), name, date });
+          exams.sort((a, b) => a.date.localeCompare(b.date));
+          saveCollection(examsStorageKey, exams);
+          event.currentTarget.reset();
+          renderExams();
+          showToast("Exam countdown added");
+        });
+        document.getElementById("todo-form").addEventListener("submit", event => {
+          event.preventDefault();
+          const title = document.getElementById("todo-title-input").value.trim();
+          const deadline = document.getElementById("todo-deadline-input").value;
+          if (!title || !parseLocalDate(deadline)) return;
+          todos.push({ id: crypto.randomUUID(), title, deadline, done: false });
+          saveCollection(todosStorageKey, todos);
+          event.currentTarget.reset();
+          renderTodos();
+          showToast("Task added to your list");
+        });
+        document.getElementById("pomodoro-toggle").addEventListener("click", () => {
+          if (timerRunning) {
+            tickPomodoro();
+            timerRunning = false;
+            stopPomodoroInterval();
+          } else {
+            timerDeadline = Date.now() + timerRemaining * 1000;
+            timerRunning = true;
+            timerInterval = setInterval(tickPomodoro, 250);
+          }
+          renderPomodoro();
+        });
+        document.getElementById("pomodoro-reset").addEventListener("click", () => {
+          timerRunning = false;
+          stopPomodoroInterval();
+          timerRemaining = timerDuration(timerMode);
+          renderPomodoro();
+        });
+        ["focus-minutes", "break-minutes"].forEach(id => document.getElementById(id).addEventListener("change", savePomodoroSettings));
         document.getElementById("clear-button").addEventListener("click", () => {
           if (!courses.length) { showToast("Your timetable is already clear"); return; }
           if (!window.confirm("Remove all courses from your timetable?")) return;
@@ -729,6 +1239,17 @@
             catch (storageError) { console.error("Could not read timetable updated in another tab.", storageError); }
             renderWeek();
             setSaveStatus("saved", "Updated in another tab");
+          } else if (event.key === examsStorageKey) {
+            exams = loadCollection(examsStorageKey);
+            renderExams();
+          } else if (event.key === todosStorageKey) {
+            todos = loadCollection(todosStorageKey);
+            renderTodos();
+          } else if (event.key === semesterStorageKey) {
+            const settings = loadSemesterSettings();
+            semesterStartInput.value = settings.start;
+            semesterWeeksInput.value = String(settings.weeks);
+            renderSemesterProgress();
           } else if (event.key === weekendStorageKey) {
             weekendToggle.checked = event.newValue === "true";
             updateWeekendOptions();
@@ -742,7 +1263,14 @@
           }
         });
         updateWeekendOptions();
+        updateVenueField();
         renderWeek();
+        renderSemesterProgress();
+        renderExams();
+        renderTodos();
+        renderPomodoro();
+        setInterval(renderExams, 60000);
+        setInterval(renderSemesterProgress, 3600000);
       })();
     </script>
   </body>

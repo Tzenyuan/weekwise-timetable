@@ -7,7 +7,9 @@ Weekwise is a lightweight, responsive timetable maker for planning a recurring w
 ## Features
 
 - Add courses with a name, venue, weekday, and start and end times.
-- View a recurring Monday-to-Friday schedule, with an option to expand it to Saturday and Sunday.
+- Browse dated weeks in the recurring Monday-to-Friday schedule, with an option to expand it to Saturday and Sunday.
+- Set the semester start date and length, and see the percentage of the semester remaining.
+- Choose a color for each course and mark it as in person or online.
 - Edit or remove courses and get warned about overlapping classes.
 - Drag courses to another day and time; moves snap to 15-minute increments and prevent overlaps.
 - Automatically save courses and preferences in browser storage, with changes shared across open tabs.
@@ -16,13 +18,16 @@ Weekwise is a lightweight, responsive timetable maker for planning a recurring w
 - Keep your courses and theme saved in your browser.
 - Export a print-ready timetable using **Export as PDF**. Choose **Save as PDF** in your browser's print dialog.
 - Export recurring weekly courses as an `.ics` calendar file for Google Calendar or Apple Calendar.
+- Switch to the Study Hub for exam countdowns, a configurable Pomodoro timer, and a deadline-based to-do list.
 - Use the responsive layout on desktop and mobile.
 
 ## Use
 
-Open the [live app](https://tzenyuan.github.io/weekwise-timetable/), or open `index.html` in a modern web browser. Add a course in the form; select a course in the timetable to edit or remove it. Drag a course to another day or time to reschedule it. Turn on **Include weekends** to show Saturday and Sunday. Use **Clear all** to remove every course.
+Open the [live app](https://tzenyuan.github.io/weekwise-timetable/), or open `index.html` in a modern web browser. Use the week arrows to browse dates and **Today** to return to the current week. Set the semester start date and total weeks to track your progress. Add a course in the form; choose its format and color, then select it in the timetable to edit or remove it. Drag a course to another day or time to reschedule it. Turn on **Include weekends** to show Saturday and Sunday. Use **Clear all** to remove every course.
 
-Courses, the weekend setting, and theme preferences are saved automatically in the browser's local storage. They stay in that browser on that device and are not synced to other devices.
+Open **Study hub** to add exam dates, run focus and break intervals, and manage tasks with deadlines and completion checkboxes.
+
+Courses, semester settings, the weekend setting, theme preferences, exams, and tasks are saved automatically in the browser's local storage. They stay in that browser on that device and are not synced to other devices.
 
 ## Calendar export
 
