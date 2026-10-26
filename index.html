@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f5f1" />
+    <title>Weekwise — Timetable maker</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+
+      :root {
+        color-scheme: light;
+        --ink: #22251f;
+        --muted: #7d8078;
+        --line: #e9e8e2;
+        --paper: #fffefa;
+        --canvas: #f6f5f1;
+        --green: #3e674a;
+        --green-dark: #2d5139;
+        --lime: #d8f088;
+        --shadow: 0 18px 60px rgba(37, 44, 34, 0.08);
+        --panel-border: #eeede7;
+        --grid-line: #eeede8;
+        --column-line: #f0efe9;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-width: 320px;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+      }
+      button, input, select { font: inherit; }
+      button { cursor: pointer; }
+      body[data-theme="ocean"] {
+        --ink: #1d2c3a; --muted: #718394; --line: #dfe8ed; --paper: #fbfdff;
+        --canvas: #edf4f7; --green: #35677a; --green-dark: #285667; --lime: #b9e6e3;
+        --shadow: 0 18px 60px rgba(29, 55, 69, .09); --panel-border: #e2ebef;
+        --grid-line: #e3ebef; --column-line: #e9f0f3;
+      }
+      body[data-theme="lavender"] {
+        --ink: #30263b; --muted: #857b91; --line: #ebe4ef; --paper: #fffaff;
+        --canvas: #f5f0f7; --green: #735789; --green-dark: #5e4574; --lime: #e6d0f1;
+        --shadow: 0 18px 60px rgba(60, 42, 73, .08); --panel-border: #eee7f0;
+        --grid-line: #eee8f0; --column-line: #f3edf4;
+      }
+      body[data-theme="midnight"] {
+        color-scheme: dark;
+        --ink: #e8ede7; --muted: #a5b0a8; --line: #39463e; --paper: #202a24;
+        --canvas: #151d18; --green: #8eb99b; --green-dark: #719f80; --lime: #d7f088;
+        --shadow: 0 18px 60px rgba(0, 0, 0, .2); --panel-border: #344038;
+        --grid-line: #39463e; --column-line: #303b34;
+      }
+      .app-shell { max-width: 1500px; margin: 0 auto; padding: 0 42px 48px; }
+      .topbar {
+        height: 82px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(34, 37, 31, .08);
+      }
+      .brand { display: flex; align-items: center; gap: 11px; font: 800 19px "Manrope", sans-serif; letter-spacing: -.7px; }
+      .brand-mark {
+        width: 32px; height: 32px; border-radius: 10px; color: var(--lime); background: var(--green);
+        display: grid; place-items: center; font-size: 19px; transform: rotate(-7deg);
+      }
+      .topbar-right { display: flex; align-items: center; gap: 24px; color: var(--muted); font-size: 13px; }
+      .theme-picker { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+      .theme-picker label { font-size: 11px; }
+      .theme-picker select { min-width: 105px; padding: 8px 28px 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); font-size: 11px; }
+      .avatar { width: 34px; height: 34px; border-radius: 50%; background: #e9d8c5; display: grid; place-items: center; color: #76563e; font-weight: 700; }
+      .hero { display: flex; justify-content: space-between; align-items: end; padding: 42px 0 27px; }
+      .eyebrow { margin: 0 0 10px; color: var(--green); text-transform: uppercase; letter-spacing: 1.6px; font-size: 10px; font-weight: 700; }
+      h1 { margin: 0; font: 700 clamp(30px, 4vw, 42px)/1.1 "Manrope", sans-serif; letter-spacing: -1.8px; }
+      .hero-copy { margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+      .hero-actions { display: flex; gap: 10px; }
+      .button {
+        border: 0; border-radius: 10px; padding: 11px 16px; font-size: 13px; font-weight: 700;
+        transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+      }
+      .button:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(27, 44, 29, .12); }
+      .button:active { transform: translateY(0); }
+      .button-primary { background: var(--green); color: white; }
+      .button-primary:hover { background: var(--green-dark); }
+      .button-secondary { background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
+      .button-icon { margin-right: 7px; font-size: 16px; vertical-align: -1px; }
+      .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 325px; gap: 20px; align-items: start; }
+      .schedule-panel, .form-panel, .summary-card { background: var(--paper); border: 1px solid var(--panel-border); border-radius: 16px; box-shadow: var(--shadow); }
+      .schedule-panel { min-width: 0; overflow: hidden; }
+      .schedule-toolbar { height: 66px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+      .week-label { font: 700 15px "Manrope", sans-serif; }
+      .nav-button { border: 1px solid var(--line); color: #555a51; background: white; width: 30px; height: 30px; border-radius: 8px; }
+      .nav-button:hover { background: #f3f5ee; }
+      .grid-scroll { overflow-x: auto; }
+      .timetable { min-width: 690px; }
+      .day-headings { display: grid; grid-template-columns: 57px repeat(5, minmax(105px, 1fr)); border-bottom: 1px solid var(--line); }
+      .day-heading { padding: 16px 5px; text-align: center; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .9px; text-transform: uppercase; }
+      .calendar-body { display: grid; grid-template-columns: 57px repeat(5, minmax(105px, 1fr)); position: relative; }
+      .time-column, .day-column { height: 624px; position: relative; }
+      .time-label { height: 52px; padding: 0 7px; position: relative; top: -7px; text-align: right; color: #969990; font-size: 10px; }
+      .day-column { border-left: 1px solid var(--column-line); background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 51px, var(--grid-line) 51px, var(--grid-line) 52px); }
+      .day-column:nth-child(2) { border-left: 0; }
+      .course-card {
+        position: absolute; left: 5px; right: 5px; min-height: 38px; padding: 8px 8px 6px 10px;
+        border-radius: 8px; overflow: hidden; border-left: 3px solid var(--course-color);
+        background: var(--course-bg); color: var(--course-text); animation: card-in .36s cubic-bezier(.2,.8,.2,1) both;
+        transition: filter .18s, transform .18s; cursor: pointer;
+      }
+      .course-card:hover { filter: saturate(1.12); transform: translateY(-2px); z-index: 3; }
+      .course-name { font-size: 11px; font-weight: 700; line-height: 1.3; }
+      .course-meta { margin-top: 4px; font-size: 9px; opacity: .78; line-height: 1.35; }
+      .course-card.compact { padding-top: 6px; }
+      .course-card.compact .course-meta { margin-top: 2px; }
+      .empty-state {
+        position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+        color: #9b9d96; font-size: 12px; text-align: center; line-height: 1.7;
+      }
+      .empty-state span { display: block; font-size: 24px; margin-bottom: 3px; }
+      .sidebar { display: grid; gap: 15px; }
+      .form-panel { padding: 20px; }
+      .panel-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+      .panel-heading h2 { margin: 0; font: 700 15px "Manrope", sans-serif; letter-spacing: -.3px; }
+      .heading-icon { color: var(--green); font-size: 20px; }
+      .field { margin: 0 0 13px; }
+      .field label { display: block; margin-bottom: 6px; color: #62665d; font-size: 11px; font-weight: 700; }
+      .field input, .field select {
+        width: 100%; height: 39px; padding: 0 11px; border: 1px solid #e7e6df; border-radius: 8px; outline: none;
+        color: var(--ink); background: var(--paper); font-size: 12px; transition: border-color .18s, box-shadow .18s;
+      }
+      .field input:focus, .field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 15%, transparent); }
+      .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .form-submit { width: 100%; margin-top: 2px; }
+      .form-hint { margin: 11px 0 0; color: #95988f; font-size: 10px; line-height: 1.5; }
+      .form-error { display: none; margin: -3px 0 11px; color: #b94b42; font-size: 11px; line-height: 1.4; }
+      .summary-card { padding: 17px 19px; box-shadow: none; display: flex; align-items: center; gap: 13px; }
+      .summary-icon { width: 38px; height: 38px; border-radius: 11px; background: #eff3e3; color: var(--green); display: grid; place-items: center; font-size: 18px; }
+      .summary-number { font: 800 20px "Manrope", sans-serif; letter-spacing: -.7px; }
+      .summary-caption { margin-top: 2px; color: var(--muted); font-size: 10px; }
+      .toast {
+        position: fixed; bottom: 24px; left: 50%; z-index: 10; transform: translate(-50%, 18px);
+        padding: 11px 16px; border-radius: 10px; background: #283e2e; color: white; font-size: 12px;
+        opacity: 0; pointer-events: none; transition: opacity .22s, transform .22s;
+      }
+      .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+      @keyframes card-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+      }
+      @media (max-width: 980px) {
+        .app-shell { padding: 0 24px 35px; }
+        .workspace { grid-template-columns: minmax(0, 1fr) 285px; gap: 14px; }
+        .form-panel { padding: 17px; }
+        .hero { padding-top: 34px; }
+      }
+      @media (max-width: 760px) {
+        .app-shell { padding: 0 15px 28px; }
+        .topbar { height: 68px; }
+        .topbar-right { gap: 12px; }
+        .theme-picker label { display: none; }
+        .hero { display: block; padding: 30px 0 20px; }
+        .hero-actions { margin-top: 18px; }
+        .workspace { grid-template-columns: 1fr; }
+        .sidebar { grid-template-columns: 1fr; }
+        .schedule-toolbar { padding: 0 14px; }
+      }
+      @media (max-width: 430px) {
+        .app-shell { padding-left: 10px; padding-right: 10px; }
+        .topbar-right { font-size: 11px; }
+        .hero-actions .button { flex: 1; padding: 11px 10px; }
+        .schedule-panel, .form-panel { border-radius: 13px; }
+        .week-label { font-size: 13px; }
+      }
+      @page { size: A4 landscape; margin: 8mm; }
+      @media print {
+        body { min-width: 0; background: white; color: #222; font-family: Arial, sans-serif; }
+        .app-shell { max-width: none; padding: 0; }
+        .topbar { height: auto; padding: 0 0 8px; border-bottom: 1px solid #ccc; }
+        .topbar-right, .hero-actions, .sidebar, .schedule-toolbar, .empty-state, .toast { display: none !important; }
+        .hero { padding: 10px 0; }
+        .eyebrow { margin-bottom: 3px; font-size: 8pt; }
+        h1 { font-size: 20pt; }
+        .hero-copy { margin-top: 3px; font-size: 9pt; }
+        .workspace { display: block; }
+        .schedule-panel { overflow: visible; border: 0; box-shadow: none; }
+        .grid-scroll { overflow: visible; }
+        .timetable { min-width: 0; }
+        .day-headings, .calendar-body { grid-template-columns: 14mm repeat(5, minmax(0, 1fr)); }
+        .day-heading { padding: 6px 2px; color: #555; font-size: 8pt; }
+        .time-column, .day-column { height: 156mm; }
+        .time-label { height: 13mm; top: -2mm; padding-right: 2mm; color: #555; font-size: 7pt; }
+        .day-column { background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(13mm - 1px), #ddd calc(13mm - 1px), #ddd 13mm); }
+        .course-card { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark">w</span> weekwise</div>
+        <div class="topbar-right">
+          <div class="theme-picker">
+            <label for="theme-select">Theme</label>
+            <select id="theme-select" aria-label="Choose app theme">
+              <option value="sage">Sage</option><option value="ocean">Ocean</option>
+              <option value="lavender">Lavender</option><option value="midnight">Midnight</option>
+            </select>
+          </div>
+          <div class="avatar" aria-label="Your profile">A</div>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Your week, in sync</p>
+            <h1>Class timetable</h1>
+            <p class="hero-copy">A little structure goes a long way. Make this week yours.</p>
+          </div>
+          <div class="hero-actions">
+            <button class="button button-secondary" id="clear-button"><span class="button-icon">↺</span>Clear all</button>
+            <button class="button button-primary" id="export-button"><span class="button-icon">↓</span>Export as PDF</button>
+          </div>
+        </section>
+
+        <div class="workspace">
+          <section class="schedule-panel" aria-label="Weekly timetable">
+            <div class="schedule-toolbar">
+              <div class="week-label">Your weekly schedule</div>
+            </div>
+            <div class="grid-scroll">
+              <div class="timetable">
+                <div class="day-headings" id="day-headings"></div>
+                <div class="calendar-body" id="calendar-body">
+                  <div class="time-column" id="time-column"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="sidebar">
+            <section class="form-panel">
+              <div class="panel-heading">
+                <h2 id="form-title">Add a course</h2><span class="heading-icon">✳</span>
+              </div>
+              <form id="course-form">
+                <div class="field">
+                  <label for="course-name">Course name</label>
+                  <input id="course-name" name="name" placeholder="e.g. Introduction to Design" maxlength="48" required />
+                </div>
+                <div class="field">
+                  <label for="course-venue">Venue</label>
+                  <input id="course-venue" name="venue" placeholder="e.g. Arts Building · 204" maxlength="48" required />
+                </div>
+                <div class="field">
+                  <label for="course-day">Day</label>
+                  <select id="course-day" name="day" required>
+                    <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
+                    <option value="3">Thursday</option><option value="4">Friday</option>
+                  </select>
+                </div>
+                <div class="field-row">
+                  <div class="field">
+                    <label for="course-start">Starts</label>
+                    <input id="course-start" name="start" type="time" min="08:00" max="20:00" value="09:00" required />
+                  </div>
+                  <div class="field">
+                    <label for="course-end">Ends</label>
+                    <input id="course-end" name="end" type="time" min="08:00" max="20:00" value="10:00" required />
+                  </div>
+                </div>
+                <p class="form-error" id="form-error" role="alert"></p>
+                <button class="button button-primary form-submit" type="submit" id="submit-button">Add to timetable <span class="button-icon">↗</span></button>
+                <button class="button button-secondary form-submit" type="button" id="delete-course-button" hidden>Remove course</button>
+                <p class="form-hint">Click a course on your timetable to edit or remove it. Your schedule saves automatically.</p>
+              </form>
+            </section>
+            <div class="summary-card">
+              <div class="summary-icon">◷</div>
+              <div><div class="summary-number" id="course-count">0</div><div class="summary-caption">classes this week</div></div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-icon">⌁</div>
+              <div><div class="summary-number" id="hours-count">0h</div><div class="summary-caption">of focused learning</div></div>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <script>
+      (() => {
+        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+        const palette = [
+          ["#e5efff", "#426ba5", "#315b96"],
+          ["#fce8dc", "#a35b37", "#934d2c"],
+          ["#e8f1dd", "#60814b", "#4d6e3c"],
+          ["#f4e5f1", "#905c87", "#7a4772"],
+          ["#fff0c9", "#9a7737", "#80622b"]
+        ];
+        const storageKey = "weekwise-courses-v1";
+        const calendarBody = document.getElementById("calendar-body");
+        const headings = document.getElementById("day-headings");
+        const form = document.getElementById("course-form");
+        const error = document.getElementById("form-error");
+        const toast = document.getElementById("toast");
+        const courseName = document.getElementById("course-name");
+        const courseVenue = document.getElementById("course-venue");
+        const courseDay = document.getElementById("course-day");
+        const courseStart = document.getElementById("course-start");
+        const courseEnd = document.getElementById("course-end");
+        const themeSelect = document.getElementById("theme-select");
+        let courses = loadCourses();
+        let editingId = null;
+        let toastTimer;
+        const savedTheme = localStorage.getItem("weekwise-theme-v1");
+        if (["sage", "ocean", "lavender", "midnight"].includes(savedTheme)) {
+          document.body.dataset.theme = savedTheme;
+          themeSelect.value = savedTheme;
+        }
+
+        function loadCourses() {
+          try {
+            const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+            return Array.isArray(saved) ? saved.filter(item =>
+              item && typeof item.id === "string" && typeof item.name === "string" &&
+              typeof item.venue === "string" && Number.isInteger(item.day) &&
+              item.day >= 0 && item.day < 5 && validTime(item.start) && validTime(item.end)
+            ) : [];
+          } catch (storageError) {
+            console.error("Could not load saved timetable.", storageError);
+            return [];
+          }
+        }
+        function validTime(value) { return typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(value); }
+        function saveCourses() {
+          try { localStorage.setItem(storageKey, JSON.stringify(courses)); }
+          catch (storageError) { console.error("Could not save timetable.", storageError); showToast("Could not save your timetable."); }
+        }
+        function minutes(value) {
+          const [hours, mins] = value.split(":").map(Number);
+          return hours * 60 + mins;
+        }
+        function renderWeek() {
+          headings.innerHTML = '<div></div>' + days.map(day => `<div class="day-heading">${day}</div>`).join("");
+          calendarBody.querySelectorAll(".day-column").forEach(column => column.remove());
+          const timeColumn = document.getElementById("time-column");
+          timeColumn.innerHTML = Array.from({ length: 12 }, (_, i) => {
+            const hour = i + 8;
+            return `<div class="time-label">${hour < 12 ? hour + " AM" : hour === 12 ? "12 PM" : (hour - 12) + " PM"}</div>`;
+          }).join("");
+          for (let day = 0; day < 5; day++) {
+            const column = document.createElement("div");
+            column.className = "day-column";
+            column.dataset.day = String(day);
+            const dayCourses = courses.filter(course => course.day === day);
+            dayCourses.forEach(course => {
+              const start = minutes(course.start);
+              const end = minutes(course.end);
+              const top = (start - 8 * 60) / 60 * 52;
+              const height = Math.max((end - start) / 60 * 52 - 4, 36);
+              const color = palette[course.color % palette.length];
+              const card = document.createElement("button");
+              card.type = "button";
+              card.className = "course-card" + (height < 58 ? " compact" : "");
+              card.style.cssText = `top:${top}px;height:${height}px;--course-bg:${color[0]};--course-color:${color[1]};--course-text:${color[2]}`;
+              card.style.animationDelay = `${dayCourses.indexOf(course) * 35}ms`;
+              card.dataset.courseId = course.id;
+              card.setAttribute("aria-label", `${course.name}, ${course.start} to ${course.end}, ${course.venue}. Select to edit.`);
+              card.innerHTML = `<div class="course-name"></div><div class="course-meta"></div>`;
+              card.querySelector(".course-name").textContent = course.name;
+              card.querySelector(".course-meta").textContent = `${formatTime(course.start)} – ${formatTime(course.end)} · ${course.venue}`;
+              card.addEventListener("click", () => editCourse(course.id));
+              column.appendChild(card);
+            });
+            calendarBody.appendChild(column);
+          }
+          if (courses.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "empty-state";
+            empty.innerHTML = "<div><span>✳</span>Your week is wide open.<br>Add a course to get started.</div>";
+            calendarBody.appendChild(empty);
+          } else {
+            const empty = calendarBody.querySelector(".empty-state");
+            if (empty) empty.remove();
+          }
+          document.getElementById("course-count").textContent = String(courses.length);
+          const totalMinutes = courses.reduce((total, course) => total + minutes(course.end) - minutes(course.start), 0);
+          document.getElementById("hours-count").textContent = `${Math.floor(totalMinutes / 60)}h${totalMinutes % 60 ? ` ${totalMinutes % 60}m` : ""}`;
+        }
+        function formatTime(value) {
+          const [hour, minute] = value.split(":").map(Number);
+          return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour < 12 ? "AM" : "PM"}`;
+        }
+        function showToast(message) {
+          toast.textContent = message;
+          toast.classList.add("visible");
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => toast.classList.remove("visible"), 2500);
+        }
+        function resetForm() {
+          editingId = null;
+          form.reset();
+          courseStart.value = "09:00";
+          courseEnd.value = "10:00";
+          document.getElementById("form-title").textContent = "Add a course";
+          document.getElementById("submit-button").innerHTML = 'Add to timetable <span class="button-icon">↗</span>';
+          document.getElementById("delete-course-button").hidden = true;
+          error.style.display = "none";
+        }
+        function editCourse(id) {
+          const course = courses.find(item => item.id === id);
+          if (!course) return;
+          editingId = id;
+          courseName.value = course.name;
+          courseVenue.value = course.venue;
+          courseDay.value = String(course.day);
+          courseStart.value = course.start;
+          courseEnd.value = course.end;
+          document.getElementById("form-title").textContent = "Edit course";
+          document.getElementById("submit-button").innerHTML = 'Save changes <span class="button-icon">↗</span>';
+          document.getElementById("delete-course-button").hidden = false;
+          error.style.display = "none";
+          courseName.focus();
+          if (window.matchMedia("(max-width: 760px)").matches) document.querySelector(".form-panel").scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+
+        form.addEventListener("submit", event => {
+          event.preventDefault();
+          const name = courseName.value.trim();
+          const venue = courseVenue.value.trim();
+          const day = Number(courseDay.value);
+          const start = courseStart.value;
+          const end = courseEnd.value;
+          if (!name || !venue) {
+            error.textContent = "Add a course name and venue to continue.";
+            error.style.display = "block";
+            return;
+          }
+          if (!validTime(start) || !validTime(end) || minutes(end) <= minutes(start)) {
+            error.textContent = "The end time must be later than the start time.";
+            error.style.display = "block";
+            return;
+          }
+          if (minutes(start) < 8 * 60 || minutes(end) > 20 * 60) {
+            error.textContent = "Choose times between 8:00 AM and 8:00 PM.";
+            error.style.display = "block";
+            return;
+          }
+          const overlapping = courses.some(course => course.id !== editingId && course.day === day &&
+            minutes(start) < minutes(course.end) && minutes(end) > minutes(course.start));
+          if (overlapping) {
+            error.textContent = "This class overlaps another course on that day.";
+            error.style.display = "block";
+            return;
+          }
+          const wasEditing = Boolean(editingId);
+          if (editingId) {
+            courses = courses.map(course => course.id === editingId ? { ...course, name, venue, day, start, end } : course);
+          } else {
+            courses.push({ id: crypto.randomUUID(), name, venue, day, start, end, color: courses.length % palette.length });
+          }
+          courses.sort((a, b) => a.day - b.day || minutes(a.start) - minutes(b.start));
+          saveCourses();
+          renderWeek();
+          resetForm();
+          showToast(wasEditing ? "Course updated" : "Course added to your week");
+        });
+
+        themeSelect.addEventListener("change", () => {
+          document.body.dataset.theme = themeSelect.value;
+          try { localStorage.setItem("weekwise-theme-v1", themeSelect.value); }
+          catch (storageError) { console.error("Could not save theme preference.", storageError); }
+        });
+        document.getElementById("clear-button").addEventListener("click", () => {
+          if (!courses.length) { showToast("Your timetable is already clear"); return; }
+          if (!window.confirm("Remove all courses from your timetable?")) return;
+          courses = [];
+          saveCourses();
+          renderWeek();
+          resetForm();
+          showToast("All courses removed");
+        });
+        document.getElementById("delete-course-button").addEventListener("click", () => {
+          const course = courses.find(item => item.id === editingId);
+          if (!course || !window.confirm(`Remove "${course.name}" from your timetable?`)) return;
+          courses = courses.filter(item => item.id !== course.id);
+          saveCourses();
+          renderWeek();
+          resetForm();
+          showToast("Course removed");
+        });
+        document.getElementById("export-button").addEventListener("click", () => {
+          const previousTitle = document.title;
+          document.title = "my-timetable";
+          window.addEventListener("afterprint", () => { document.title = previousTitle; }, { once: true });
+          window.print();
+        });
+        renderWeek();
+      })();
+    </script>
+  </body>
+</html>
