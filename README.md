@@ -1,54 +1,55 @@
 # Weekwise
 
-Weekwise is a lightweight, responsive timetable maker for planning a recurring weekly class schedule. It runs in the browser with no framework, build tools, or account required.
+Weekwise is a lightweight weekly timetable and study planner that runs directly in a modern browser. It helps students organize recurring classes, track a semester, and keep study tasks in one place.
 
-**Live app:** [tzenyuan.github.io/weekwise-timetable](https://tzenyuan.github.io/weekwise-timetable/)
+## Screenshots
+
+![Weekwise weekly timetable](screenshots/timetable.png)
+
+![Weekwise study hub](screenshots/study-hub.png)
 
 ## Features
 
-- Add courses with a name, venue, weekday, and start and end times.
-- Browse dated weeks in the recurring Monday-to-Friday schedule, with an option to expand it to Saturday and Sunday.
-- Set the semester start date and length, and see the percentage of the semester remaining.
-- Choose a color for each course and mark it as in person or online.
-- Edit or remove courses and get warned about overlapping classes.
-- Drag courses to another day and time; moves snap to 15-minute increments and prevent overlaps.
-- Automatically save courses and preferences in browser storage, with changes shared across open tabs.
-- Give courses with the same name the same color.
-- Choose from Sage, Ocean, Lavender, and Midnight themes.
-- Keep your courses and theme saved in your browser.
-- Export a print-ready timetable using **Export as PDF**. Choose **Save as PDF** in your browser's print dialog.
-- Export recurring weekly courses as an `.ics` calendar file for Google Calendar or Apple Calendar.
-- Switch to the Study Hub for exam countdowns, a configurable Pomodoro timer, and a deadline-based to-do list.
-- Use the responsive layout on desktop and mobile.
+- Create and edit recurring classes with a course name, day, start and end time, venue, and in-person or online format.
+- View a weekly timetable, with an option to include Saturday and Sunday.
+- Choose course colors from a grid palette. Classes with the same course name share a color.
+- Automatically save timetable, semester, exam, to-do, and theme settings in the browser.
+- Set a semester start date and length to see semester progress.
+- Export the timetable as a printable PDF or a recurring iCalendar (`.ics`) file. Calendar export can optionally stop on a selected end date.
+- Use the Study Hub for exam countdowns, a Pomodoro timer, and deadline-based tasks.
+- Choose from seven visual themes.
 
-## Use
+## Architecture
 
-Open the [live app](https://tzenyuan.github.io/weekwise-timetable/), or open `index.html` in a modern web browser. Use the week arrows to browse dates and **Today** to return to the current week. Set the semester start date and total weeks to track your progress. Add a course in the form; choose its format and color, then select it in the timetable to edit or remove it. Drag a course to another day or time to reschedule it. Turn on **Include weekends** to show Saturday and Sunday. Use **Clear all** to remove every course.
+Weekwise is intentionally a static app: it has no backend, account system, build step, or third-party JavaScript dependencies. This keeps it quick to host on GitHub Pages and lets timetable data remain in the user's browser rather than requiring a service to store it.
 
-Open **Study hub** to add exam dates, run focus and break intervals, and manage tasks with deadlines and completion checkboxes.
+- `index.html` contains the page structure and form controls.
+- `styles.css` provides responsive layouts, themes, animations, and print styles.
+- `app.js` handles timetable and Study Hub interactions, browser storage, and PDF/calendar exports.
 
-Courses, semester settings, the weekend setting, theme preferences, exams, and tasks are saved automatically in the browser's local storage. They stay in that browser on that device and are not synced to other devices.
+The browser's `localStorage` is the only data store. The app has no framework or package-install requirement.
 
-## Calendar export
+## Run locally
 
-Select **Export calendar** to download `weekwise-timetable.ics`. Each class is exported as a weekly recurring event with its course name, venue, and local start and end times. The first event is scheduled for its next upcoming weekday; the recurrence continues weekly.
+Serve the repository directory with any static HTTP server and open it in a current browser; this gives browser storage a consistent origin. GitHub Pages hosts the deployed version at [tzenyuan.github.io/weekwise-timetable](https://tzenyuan.github.io/weekwise-timetable/).
 
-- **Google Calendar:** Open Google Calendar, go to **Settings → Import & export → Import**, and select the downloaded `.ics` file and destination calendar.
-- **Apple Calendar:** Open the `.ics` file, or use **File → Import** in Calendar, then choose the destination calendar.
+## Testing guide
 
-Calendar events use floating local times, so the receiving calendar applies its local time zone.
+There is no build step or automated test runner. Check the app in a current desktop browser:
 
-## Development
+1. Open the app in a current desktop browser, add classes on different weekdays, and confirm the weekly view, editing, weekend toggle, and automatic save work after a reload.
+2. Change a course color and verify that another class with the same course name uses that color. Try each theme and check the layout at a narrow window width.
+3. Set the semester start date and number of weeks, then verify the displayed progress. Add an exam and a to-do with a deadline; check the countdown, completion checkbox, and Pomodoro controls.
+4. Export a PDF and open the `.ics` file in a text editor. For calendar-export edge cases, use a long course name and venue containing commas and semicolons, include non-English text, and choose an end date near the end of the semester. Check that text is preserved, special characters are escaped, long lines are folded, recurring events stop at the chosen date, and classes after it are excluded. The export end date is optional.
+5. Import the `.ics` file into a calendar app to verify its display and recurrence. This final import depends on the calendar application and is not performed automatically by Weekwise.
 
-The app is a static site and has no build step or external runtime dependencies. To work on it locally, clone the repository and open `index.html` in a browser:
+## Known limitations
 
-```sh
-git clone https://github.com/Tzenyuan/weekwise-timetable.git
-cd weekwise-timetable
-```
-
-Edit `index.html`, then reload it in your browser to see changes. The site is deployed from the `main` branch using GitHub Pages.
+- Data is stored only in the current browser profile. It is not synchronized between devices, and clearing that profile's site data removes it.
+- PDF export uses the browser's print dialog; choose “Save as PDF” there.
+- Calendar import and display can vary between calendar applications. The `.ics` export is a recurring schedule, not a connection that syncs future edits.
+- Weekwise does not have accounts, cloud backup, notifications, or collaboration.
 
 ## License
 
-This project is available under the [MIT License](LICENSE).
+Released under the MIT License. See [LICENSE](LICENSE).
