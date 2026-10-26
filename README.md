@@ -7,18 +7,31 @@ Weekwise is a lightweight, responsive timetable maker for planning a recurring w
 ## Features
 
 - Add courses with a name, venue, weekday, and start and end times.
-- View the recurring Monday-to-Friday schedule in an animated weekly grid.
+- View a recurring Monday-to-Friday schedule, with an option to expand it to Saturday and Sunday.
 - Edit or remove courses and get warned about overlapping classes.
+- Drag courses to another day and time; moves snap to 15-minute increments and prevent overlaps.
+- Automatically save courses and preferences in browser storage, with changes shared across open tabs.
+- Give courses with the same name the same color.
 - Choose from Sage, Ocean, Lavender, and Midnight themes.
 - Keep your courses and theme saved in your browser.
 - Export a print-ready timetable using **Export as PDF**. Choose **Save as PDF** in your browser's print dialog.
+- Export recurring weekly courses as an `.ics` calendar file for Google Calendar or Apple Calendar.
 - Use the responsive layout on desktop and mobile.
 
 ## Use
 
-Open the [live app](https://tzenyuan.github.io/weekwise-timetable/), or open `index.html` in a modern web browser. Add a course in the form; select a course in the timetable to edit or remove it. Use **Clear all** to remove every course.
+Open the [live app](https://tzenyuan.github.io/weekwise-timetable/), or open `index.html` in a modern web browser. Add a course in the form; select a course in the timetable to edit or remove it. Drag a course to another day or time to reschedule it. Turn on **Include weekends** to show Saturday and Sunday. Use **Clear all** to remove every course.
 
-Courses and theme preferences are stored in the browser's local storage. They stay in that browser on that device and are not synced to other devices.
+Courses, the weekend setting, and theme preferences are saved automatically in the browser's local storage. They stay in that browser on that device and are not synced to other devices.
+
+## Calendar export
+
+Select **Export calendar** to download `weekwise-timetable.ics`. Each class is exported as a weekly recurring event with its course name, venue, and local start and end times. The first event is scheduled for its next upcoming weekday; the recurrence continues weekly.
+
+- **Google Calendar:** Open Google Calendar, go to **Settings → Import & export → Import**, and select the downloaded `.ics` file and destination calendar.
+- **Apple Calendar:** Open the `.ics` file, or use **File → Import** in Calendar, then choose the destination calendar.
+
+Calendar events use floating local times, so the receiving calendar applies its local time zone.
 
 ## Development
 
