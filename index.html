@@ -28,6 +28,7 @@
       <nav class="app-tabs" role="tablist" aria-label="Weekwise sections">
         <button class="app-tab" id="planner-tab" type="button" role="tab" aria-controls="planner-page" aria-selected="true">Timetable</button>
         <button class="app-tab" id="study-tab" type="button" role="tab" aria-controls="study-page" aria-selected="false">Study hub</button>
+        <button class="app-tab" id="notes-tab" type="button" role="tab" aria-controls="notes-page" aria-selected="false">Notes</button>
       </nav>
       <main>
         <div class="app-page" id="planner-page" role="tabpanel" aria-labelledby="planner-tab">
@@ -84,7 +85,7 @@
                 </div>
               </div>
               <div class="semester-progress-row">
-                <div class="semester-progress" id="semester-progress" role="progressbar" aria-label="Semester remaining" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+                <div class="semester-progress" id="semester-progress" role="progressbar" aria-label="Semester completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                   <div class="semester-progress-fill" id="semester-progress-fill"></div>
                 </div>
                 <div class="semester-progress-label" id="semester-progress-label"></div>
@@ -188,6 +189,11 @@
                   <label>Focus <input id="focus-minutes" type="number" min="1" max="90" value="25" aria-label="Focus minutes" /> min</label>
                   <label>Break <input id="break-minutes" type="number" min="1" max="30" value="5" aria-label="Break minutes" /> min</label>
                 </div>
+                <label class="chime-toggle" for="pomodoro-chime">
+                  <input id="pomodoro-chime" type="checkbox" checked />
+                  <span class="chime-icon" aria-hidden="true">♫</span>
+                  Play a gentle chime when a session ends
+                </label>
               </div>
             </section>
             <section class="study-card wide" aria-labelledby="todos-heading">
@@ -200,6 +206,50 @@
               <div class="todo-list" id="todo-list"></div>
             </section>
           </div>
+        </section>
+
+        <section class="app-page" id="notes-page" role="tabpanel" aria-labelledby="notes-tab" hidden>
+          <div class="hero notes-hero">
+            <div>
+              <p class="eyebrow">A quiet place for your thoughts</p>
+              <h1>Study notes</h1>
+              <p class="hero-copy">Write in Markdown, keep it close, and take it with you.</p>
+            </div>
+            <div class="notes-save-status" id="notes-save-status" role="status">
+              <span class="notes-save-dot"></span>
+              <span id="notes-save-label">Saved in this browser</span>
+            </div>
+          </div>
+          <section class="notes-workspace" aria-label="Markdown note editor">
+            <div class="notes-toolbar">
+              <label class="note-title-field" for="note-title">
+                <span>NOTE TITLE</span>
+                <input id="note-title" type="text" maxlength="80" value="My study notes" aria-label="Note file name" />
+              </label>
+              <div class="notes-downloads">
+                <button class="button button-secondary" id="download-txt-button" type="button"><span aria-hidden="true">↓</span> Plain text</button>
+                <button class="button button-primary" id="download-md-button" type="button"><span aria-hidden="true">↓</span> Markdown</button>
+              </div>
+            </div>
+            <div class="notes-editor-grid">
+              <section class="note-pane" aria-labelledby="note-write-heading">
+                <div class="note-pane-heading">
+                  <div><span class="note-pane-kicker">01 / WRITE</span><h2 id="note-write-heading">Your note</h2></div>
+                  <span class="markdown-badge">MARKDOWN</span>
+                </div>
+                <textarea id="note-content" class="note-editor" aria-label="Write your note in Markdown" spellcheck="true" placeholder="# Today's notes&#10;&#10;Capture an idea, a lecture summary, or a plan for what comes next.&#10;&#10;Use **bold**, *italics*, lists, links, and code."></textarea>
+                <div class="note-editor-footer"><span>Autosaves as you type</span><span id="note-word-count">0 words</span></div>
+              </section>
+              <section class="note-pane note-preview-pane" aria-labelledby="note-preview-heading">
+                <div class="note-pane-heading">
+                  <div><span class="note-pane-kicker">02 / PREVIEW</span><h2 id="note-preview-heading">A little perspective</h2></div>
+                  <span class="preview-live"><span></span> LIVE</span>
+                </div>
+                <article id="note-preview" class="markdown-preview" aria-live="polite"></article>
+              </section>
+            </div>
+            <p class="notes-privacy"><span aria-hidden="true">✦</span> Your notes stay in this browser unless you download them.</p>
+          </section>
         </section>
       </main>
     </div>

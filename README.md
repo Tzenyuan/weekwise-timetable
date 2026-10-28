@@ -8,6 +8,8 @@ Weekwise is a lightweight weekly timetable and study planner that runs directly 
 
 ![Weekwise study hub](screenshots/study-hub.png)
 
+![Weekwise Markdown notes](screenshots/notes.png)
+
 ## Features
 
 - Create and edit recurring classes with a course name, day, start and end time, venue, and in-person or online format.
@@ -17,6 +19,8 @@ Weekwise is a lightweight weekly timetable and study planner that runs directly 
 - Set a semester start date and length to see semester progress.
 - Export the timetable as a printable PDF or a recurring iCalendar (`.ics`) file. Calendar export can optionally stop on a selected end date.
 - Use the Study Hub for exam countdowns, a Pomodoro timer, and deadline-based tasks.
+- Write Markdown notes with a live preview, automatic browser saving, and `.txt` or `.md` downloads.
+- Hear an optional generated chime when a Pomodoro focus or break session ends.
 - Choose from seven visual themes.
 
 ## Architecture
@@ -25,7 +29,7 @@ Weekwise is intentionally a static app: it has no backend, account system, build
 
 - `index.html` contains the page structure and form controls.
 - `styles.css` provides responsive layouts, themes, animations, and print styles.
-- `app.js` handles timetable and Study Hub interactions, browser storage, and PDF/calendar exports.
+- `app.js` handles timetable, Study Hub, and notes interactions, browser storage, and file exports.
 
 The browser's `localStorage` is the only data store. The app has no framework or package-install requirement.
 
@@ -39,15 +43,17 @@ There is no build step or automated test runner. Check the app in a current desk
 
 1. Open the app in a current desktop browser, add classes on different weekdays, and confirm the weekly view, editing, weekend toggle, and automatic save work after a reload.
 2. Change a course color and verify that another class with the same course name uses that color. Try each theme and check the layout at a narrow window width.
-3. Set the semester start date and number of weeks, then verify the displayed progress. Add an exam and a to-do with a deadline; check the countdown, completion checkbox, and Pomodoro controls.
+3. Set the semester start date and number of weeks, then verify the percentage complete. Add an exam and a to-do with a deadline; check the countdown, completion checkbox, Pomodoro controls, and optional session-end chime.
 4. Export a PDF and open the `.ics` file in a text editor. For calendar-export edge cases, use a long course name and venue containing commas and semicolons, include non-English text, and choose an end date near the end of the semester. Check that text is preserved, special characters are escaped, long lines are folded, recurring events stop at the chosen date, and classes after it are excluded. The export end date is optional.
-5. Import the `.ics` file into a calendar app to verify its display and recurrence. This final import depends on the calendar application and is not performed automatically by Weekwise.
+5. In Notes, enter Markdown headings, lists, emphasis, links, and code. Check the preview and autosave after reloading, then download both formats and confirm the files contain the note.
+6. Import the `.ics` file into a calendar app to verify its display and recurrence. This final import depends on the calendar application and is not performed automatically by Weekwise.
 
 ## Known limitations
 
 - Data is stored only in the current browser profile. It is not synchronized between devices, and clearing that profile's site data removes it.
 - PDF export uses the browser's print dialog; choose “Save as PDF” there.
 - Calendar import and display can vary between calendar applications. The `.ics` export is a recurring schedule, not a connection that syncs future edits.
+- The Notes preview supports common Markdown formatting and intentionally does not interpret raw HTML.
 - Weekwise does not have accounts, cloud backup, notifications, or collaboration.
 
 ## License

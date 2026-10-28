@@ -9,6 +9,8 @@
         const semesterStorageKey = "weekwise-semester-v1";
         const examsStorageKey = "weekwise-exams-v1";
         const todosStorageKey = "weekwise-todos-v1";
+        const notesStorageKey = "weekwise-notes-v1";
+        const chimeStorageKey = "weekwise-pomodoro-chime-v1";
         const courseColorPicker = document.getElementById("course-color-picker");
         const courseFormat = document.getElementById("course-format");
         const venueLabel = document.getElementById("venue-label");
@@ -29,6 +31,11 @@
         const weekendToggle = document.getElementById("weekend-toggle");
         const autoSaveStatus = document.getElementById("auto-save-status");
         const autoSaveLabel = document.getElementById("auto-save-label");
+        const noteTitleInput = document.getElementById("note-title");
+        const noteContentInput = document.getElementById("note-content");
+        const notesSaveStatus = document.getElementById("notes-save-status");
+        const notesSaveLabel = document.getElementById("notes-save-label");
+        const pomodoroChimeToggle = document.getElementById("pomodoro-chime");
         let courses = loadCourses();
         let editingId = null;
         let toastTimer;
@@ -41,9 +48,15 @@
         let timerRemaining = 25 * 60;
         let timerDeadline = 0;
         let timerInterval = null;
+        let noteSaveTimer = null;
+        let audioContext = null;
         const savedTheme = readPreference("weekwise-theme-v1");
         const weekendPreference = readPreference(weekendStorageKey);
         const semesterSettings = loadSemesterSettings();
+        const savedNote = loadNote();
+        noteTitleInput.value = savedNote.title;
+        noteContentInput.value = savedNote.content;
+        pomodoroChimeToggle.checked = readPreference(chimeStorageKey) !== "false";
         weekendToggle.checked = weekendPreference === "true";
         semesterStartInput.value = semesterSettings.start;
         semesterWeeksInput.value = String(semesterSettings.weeks);
@@ -55,6 +68,18 @@
         function readPreference(key) {
           try { return localStorage.getItem(key); }
           catch (storageError) { console.error("Could not read saved preference.", storageError); return null; }
+        }
+        function loadNote() {
+          try {
+            const saved = JSON.parse(localStorage.getItem(notesStorageKey) || "null");
+            return {
+              title: typeof saved?.title === "string" ? saved.title.slice(0, 80) : "My study notes",
+              content: typeof saved?.content === "string" ? saved.content : ""
+            };
+          } catch (storageError) {
+            console.error("Could not load saved notes.", storageError);
+            return { title: "My study notes", content: "" };
+          }
         }
         function loadCourses() {
           try {
@@ -154,6 +179,27 @@
             showToast("Could not save this study data in your browser.");
           }
         }
+        function saveNote() {
+          clearTimeout(noteSaveTimer);
+          notesSaveStatus.dataset.state = "saving";
+          notesSaveLabel.textContent = "Saving…";
+          renderNotePreview();
+          renderNoteWordCount();
+          noteSaveTimer = setTimeout(() => {
+            try {
+              localStorage.setItem(notesStorageKey, JSON.stringify({
+                title: noteTitleInput.value,
+                content: noteContentInput.value
+              }));
+              notesSaveStatus.dataset.state = "saved";
+              notesSaveLabel.textContent = "Saved in this browser";
+            } catch (storageError) {
+              console.error("Could not save your notes.", storageError);
+              notesSaveStatus.dataset.state = "error";
+              notesSaveLabel.textContent = "Save failed";
+            }
+          }, 250);
+        }
         function saveSemesterSettings() {
           const settings = { start: semesterStartInput.value, weeks: Number(semesterWeeksInput.value) };
           if (!parseLocalDate(settings.start) || !Number.isInteger(settings.weeks) || settings.weeks < 1 || settings.weeks > 52) return;
@@ -224,6 +270,143 @@
           monday.setDate(monday.getDate() + dayIndex);
           return monday;
         }
+        function appendInlineMarkdown(parent, text) {
+          const pattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)|\*\*(.+?)\*\*|__(.+?)__|\*(.+?)\*|_(.+?)_|`([^`]+)`/g;
+          let cursor = 0;
+          let match;
+          while ((match = pattern.exec(text))) {
+            parent.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+            if (match[2]) {
+              const link = document.createElement("a");
+              link.textContent = match[1];
+              const url = new URL(match[2], window.location.href);
+              if (["http:", "https:", "mailto:"].includes(url.protocol)) {
+                link.href = url.href;
+                if (url.protocol !== "mailto:") {
+                  link.target = "_blank";
+                  link.rel = "noopener noreferrer";
+                }
+                parent.appendChild(link);
+              } else {
+                parent.appendChild(document.createTextNode(match[0]));
+              }
+            } else {
+              const element = document.createElement(match[3] || match[4] ? "strong" : match[5] || match[6] ? "em" : "code");
+              element.textContent = match[3] || match[4] || match[5] || match[6] || match[7];
+              parent.appendChild(element);
+            }
+            cursor = pattern.lastIndex;
+          }
+          parent.appendChild(document.createTextNode(text.slice(cursor)));
+        }
+        function renderNotePreview() {
+          const preview = document.getElementById("note-preview");
+          preview.replaceChildren();
+          const source = noteContentInput.value;
+          if (!source.trim()) {
+            const empty = document.createElement("p");
+            empty.className = "markdown-empty";
+            empty.textContent = "Your ideas will find their shape here.";
+            preview.appendChild(empty);
+            return;
+          }
+          let paragraph = [];
+          let list = null;
+          let codeLines = null;
+          const flushParagraph = () => {
+            if (!paragraph.length) return;
+            const element = document.createElement("p");
+            appendInlineMarkdown(element, paragraph.join(" "));
+            preview.appendChild(element);
+            paragraph = [];
+          };
+          const stopList = () => { list = null; };
+          source.split(/\r?\n/).forEach(line => {
+            if (line.trimStart().startsWith("```")) {
+              flushParagraph();
+              stopList();
+              if (codeLines) {
+                const pre = document.createElement("pre");
+                const code = document.createElement("code");
+                code.textContent = codeLines.join("\n");
+                pre.appendChild(code);
+                preview.appendChild(pre);
+                codeLines = null;
+              } else {
+                codeLines = [];
+              }
+              return;
+            }
+            if (codeLines) {
+              codeLines.push(line);
+              return;
+            }
+            const heading = line.match(/^(#{1,3})\s+(.+)$/);
+            const unordered = line.match(/^\s*[-*+]\s+(.+)$/);
+            const ordered = line.match(/^\s*\d+\.\s+(.+)$/);
+            const quote = line.match(/^\s*>\s?(.*)$/);
+            if (heading) {
+              flushParagraph();
+              stopList();
+              const element = document.createElement(`h${heading[1].length}`);
+              appendInlineMarkdown(element, heading[2]);
+              preview.appendChild(element);
+            } else if (unordered || ordered) {
+              flushParagraph();
+              const kind = unordered ? "ul" : "ol";
+              if (!list || list.tagName.toLowerCase() !== kind) {
+                list = document.createElement(kind);
+                preview.appendChild(list);
+              }
+              const item = document.createElement("li");
+              appendInlineMarkdown(item, (unordered || ordered)[1]);
+              list.appendChild(item);
+            } else if (quote) {
+              flushParagraph();
+              stopList();
+              const element = document.createElement("blockquote");
+              appendInlineMarkdown(element, quote[1]);
+              preview.appendChild(element);
+            } else if (/^\s*---+\s*$/.test(line)) {
+              flushParagraph();
+              stopList();
+              preview.appendChild(document.createElement("hr"));
+            } else if (!line.trim()) {
+              flushParagraph();
+              stopList();
+            } else {
+              stopList();
+              paragraph.push(line.trim());
+            }
+          });
+          flushParagraph();
+          if (codeLines) {
+            const pre = document.createElement("pre");
+            const code = document.createElement("code");
+            code.textContent = codeLines.join("\n");
+            pre.appendChild(code);
+            preview.appendChild(pre);
+          }
+        }
+        function renderNoteWordCount() {
+          const words = noteContentInput.value.trim().match(/\S+/g)?.length || 0;
+          document.getElementById("note-word-count").textContent = `${words} word${words === 1 ? "" : "s"}`;
+        }
+        function downloadNote(extension) {
+          const safeName = noteTitleInput.value.trim()
+            .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/[. ]+$/g, "")
+            .slice(0, 80) || "study-notes";
+          const blob = new Blob([noteContentInput.value], { type: "text/plain;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `${safeName}.${extension}`;
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          showToast(`Note downloaded as .${extension}`);
+        }
         function renderSemesterProgress() {
           const start = parseLocalDate(semesterStartInput.value);
           const weeks = Number(semesterWeeksInput.value);
@@ -232,15 +415,15 @@
           today.setHours(0, 0, 0, 0);
           const elapsedDays = dateOrdinal(today) - dateOrdinal(start);
           const totalDays = weeks * 7;
-          const remaining = Math.max(0, Math.min(100, Math.round((totalDays - elapsedDays) / totalDays * 100)));
+          const completed = Math.max(0, Math.min(100, Math.round(elapsedDays / totalDays * 100)));
           const elapsedWeeks = Math.max(0, Math.floor(elapsedDays / 7) + 1);
           const label = elapsedDays < 0
-            ? `Starts in ${Math.ceil(-elapsedDays / 7)} week${Math.ceil(-elapsedDays / 7) === 1 ? "" : "s"} · ${remaining}% left`
+            ? `Starts in ${Math.ceil(-elapsedDays / 7)} week${Math.ceil(-elapsedDays / 7) === 1 ? "" : "s"} · 0% done`
             : elapsedDays >= totalDays
-              ? "Semester complete · 0% left"
-              : `Week ${elapsedWeeks} of ${weeks} · ${remaining}% left`;
-          document.getElementById("semester-progress-fill").style.width = `${remaining}%`;
-          document.getElementById("semester-progress").setAttribute("aria-valuenow", String(remaining));
+              ? "Semester complete · 100% done"
+              : `Week ${elapsedWeeks} of ${weeks} · ${completed}% done`;
+          document.getElementById("semester-progress-fill").style.width = `${completed}%`;
+          document.getElementById("semester-progress").setAttribute("aria-valuenow", String(completed));
           document.getElementById("semester-progress-label").textContent = label;
         }
         function renderWeek() {
@@ -319,12 +502,17 @@
           toastTimer = setTimeout(() => toast.classList.remove("visible"), 2500);
         }
         function showPage(page) {
-          const planner = page === "planner";
-          document.getElementById("planner-page").hidden = !planner;
-          document.getElementById("study-page").hidden = planner;
-          document.getElementById("planner-tab").setAttribute("aria-selected", String(planner));
-          document.getElementById("study-tab").setAttribute("aria-selected", String(!planner));
-          const nextHash = planner ? "#timetable" : "#study-hub";
+          const pages = {
+            planner: ["planner-page", "planner-tab", "#timetable"],
+            study: ["study-page", "study-tab", "#study-hub"],
+            notes: ["notes-page", "notes-tab", "#notes"]
+          };
+          const selectedPage = pages[page] ? page : "planner";
+          Object.entries(pages).forEach(([name, [pageId, tabId]]) => {
+            document.getElementById(pageId).hidden = name !== selectedPage;
+            document.getElementById(tabId).setAttribute("aria-selected", String(name === selectedPage));
+          });
+          const nextHash = pages[selectedPage][2];
           if (window.location.hash !== nextHash) window.history.replaceState(null, "", nextHash);
         }
         function renderExams() {
@@ -439,11 +627,50 @@
           if (timerInterval !== null) clearInterval(timerInterval);
           timerInterval = null;
         }
+        function preparePomodoroAudio() {
+          const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextConstructor) {
+            showToast("This browser does not support the focus timer chime.");
+            return;
+          }
+          try {
+            if (!audioContext) audioContext = new AudioContextConstructor();
+            if (audioContext.state === "suspended") {
+              audioContext.resume().catch(audioError => {
+                console.error("Could not enable the Pomodoro chime.", audioError);
+                showToast("Allow audio in your browser to hear the timer chime.");
+              });
+            }
+          } catch (audioError) {
+            console.error("Could not enable the Pomodoro chime.", audioError);
+            showToast("Could not enable the timer chime in this browser.");
+          }
+        }
+        function playPomodoroChime() {
+          if (!audioContext || audioContext.state !== "running") return;
+          const notes = [659.25, 783.99, 987.77];
+          const startAt = audioContext.currentTime;
+          notes.forEach((frequency, index) => {
+            const oscillator = audioContext.createOscillator();
+            const volume = audioContext.createGain();
+            const noteStart = startAt + index * 0.28;
+            oscillator.type = "sine";
+            oscillator.frequency.value = frequency;
+            volume.gain.setValueAtTime(0.0001, noteStart);
+            volume.gain.exponentialRampToValueAtTime(0.12, noteStart + 0.025);
+            volume.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.62);
+            oscillator.connect(volume);
+            volume.connect(audioContext.destination);
+            oscillator.start(noteStart);
+            oscillator.stop(noteStart + 0.64);
+          });
+        }
         function tickPomodoro() {
           timerRemaining = Math.max(0, Math.ceil((timerDeadline - Date.now()) / 1000));
           if (timerRemaining === 0) {
             timerRunning = false;
             stopPomodoroInterval();
+            if (pomodoroChimeToggle.checked) playPomodoroChime();
             timerMode = timerMode === "focus" ? "break" : "focus";
             timerRemaining = timerDuration(timerMode);
             showToast(timerMode === "break" ? "Focus session complete. Take a break!" : "Break is over. Ready to focus?");
@@ -663,7 +890,14 @@
         document.getElementById("today-button").addEventListener("click", () => { weekOffset = 0; renderWeek(); });
         document.getElementById("planner-tab").addEventListener("click", () => showPage("planner"));
         document.getElementById("study-tab").addEventListener("click", () => showPage("study"));
-        window.addEventListener("hashchange", () => showPage(window.location.hash === "#study-hub" ? "study" : "planner"));
+        document.getElementById("notes-tab").addEventListener("click", () => showPage("notes"));
+        window.addEventListener("hashchange", () => {
+          const pages = { "#study-hub": "study", "#notes": "notes" };
+          showPage(pages[window.location.hash] || "planner");
+        });
+        [noteTitleInput, noteContentInput].forEach(input => input.addEventListener("input", saveNote));
+        document.getElementById("download-txt-button").addEventListener("click", () => downloadNote("txt"));
+        document.getElementById("download-md-button").addEventListener("click", () => downloadNote("md"));
         document.getElementById("exam-form").addEventListener("submit", event => {
           event.preventDefault();
           const name = document.getElementById("exam-name").value.trim();
@@ -693,6 +927,7 @@
             timerRunning = false;
             stopPomodoroInterval();
           } else {
+            if (pomodoroChimeToggle.checked) preparePomodoroAudio();
             timerDeadline = Date.now() + timerRemaining * 1000;
             timerRunning = true;
             timerInterval = setInterval(tickPomodoro, 250);
@@ -706,6 +941,10 @@
           renderPomodoro();
         });
         ["focus-minutes", "break-minutes"].forEach(id => document.getElementById(id).addEventListener("change", savePomodoroSettings));
+        pomodoroChimeToggle.addEventListener("change", () => {
+          savePreference(chimeStorageKey, String(pomodoroChimeToggle.checked));
+          if (pomodoroChimeToggle.checked) preparePomodoroAudio();
+        });
         document.getElementById("clear-button").addEventListener("click", () => {
           if (!courses.length) { showToast("Your timetable is already clear"); return; }
           if (!window.confirm("Remove all courses from your timetable?")) return;
@@ -758,6 +997,14 @@
               document.body.dataset.theme = theme;
               themeSelect.value = theme;
             }
+          } else if (event.key === notesStorageKey) {
+            const note = loadNote();
+            noteTitleInput.value = note.title;
+            noteContentInput.value = note.content;
+            renderNotePreview();
+            renderNoteWordCount();
+          } else if (event.key === chimeStorageKey) {
+            pomodoroChimeToggle.checked = event.newValue !== "false";
           }
         });
         updateWeekendOptions();
@@ -768,7 +1015,9 @@
         renderExams();
         renderTodos();
         renderPomodoro();
-        showPage(window.location.hash === "#study-hub" ? "study" : "planner");
+        renderNotePreview();
+        renderNoteWordCount();
+        showPage(({ "#study-hub": "study", "#notes": "notes" })[window.location.hash] || "planner");
         setInterval(renderExams, 60000);
         setInterval(renderSemesterProgress, 3600000);
       })();

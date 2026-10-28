@@ -272,6 +272,151 @@
         .schedule-panel, .form-panel { border-radius: 13px; }
         .week-label { font-size: 13px; }
       }
+
+      :root {
+        --canvas: #f2f1eb;
+        --paper: #fffefa;
+        --ink: #202a25;
+        --muted: #78827a;
+        --line: #e6e8df;
+        --green: #376b52;
+        --green-dark: #28553f;
+        --lime: #d7edbd;
+        --panel-border: rgba(67, 87, 67, .1);
+        --shadow: 0 22px 65px rgba(48, 65, 48, .075);
+      }
+      body {
+        background:
+          radial-gradient(ellipse at 5% 0%, color-mix(in srgb, var(--green) 10%, transparent), transparent 34rem),
+          radial-gradient(ellipse at 98% 17%, color-mix(in srgb, var(--lime) 20%, transparent), transparent 30rem),
+          var(--canvas);
+      }
+      .app-shell { max-width: 1600px; padding-right: clamp(20px, 4vw, 64px); padding-left: clamp(20px, 4vw, 64px); }
+      .topbar { height: 88px; border-bottom-color: rgba(53, 78, 59, .12); }
+      .brand { gap: 13px; font-size: 20px; letter-spacing: -.9px; }
+      .brand-mark { width: 38px; height: 38px; border-radius: 13px; box-shadow: 0 6px 16px rgba(45, 81, 57, .2); }
+      .topbar-right { gap: 20px; }
+      .avatar { width: 38px; height: 38px; border: 2px solid rgba(255,255,255,.82); box-shadow: 0 4px 12px rgba(58, 52, 40, .1); }
+      .app-tabs { gap: 7px; width: fit-content; margin: 18px auto 0; padding: 5px; border: 1px solid rgba(64, 86, 64, .1); border-radius: 16px; background: color-mix(in srgb, var(--paper) 78%, transparent); box-shadow: 0 8px 26px rgba(49, 63, 48, .055); }
+      .app-tab { min-width: 105px; padding: 12px 19px; border-radius: 11px; font-size: 12px; }
+      .app-tab[aria-selected="true"] { background: var(--green); color: #fff; box-shadow: 0 5px 13px color-mix(in srgb, var(--green) 25%, transparent); }
+      .app-tab[aria-selected="true"]::after { content: none; }
+      .app-page { padding-bottom: 15px; }
+      .hero { padding: 48px 0 30px; }
+      .eyebrow { margin-bottom: 12px; letter-spacing: 2px; }
+      h1 { font-size: clamp(34px, 4vw, 49px); letter-spacing: -2.3px; }
+      .hero-copy { max-width: 490px; font-size: 14px; line-height: 1.65; }
+      .button { border-radius: 12px; padding: 12px 17px; }
+      .button-primary { box-shadow: 0 6px 16px color-mix(in srgb, var(--green) 19%, transparent); }
+      .button-secondary { border-color: var(--panel-border); }
+      .workspace { grid-template-columns: minmax(0, 1fr) 340px; gap: 22px; }
+      .schedule-panel, .form-panel, .summary-card, .semester-panel, .study-card, .notes-workspace {
+        border: 1px solid var(--panel-border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+      }
+      .schedule-toolbar { min-height: 76px; padding: 12px 22px; }
+      .nav-button { width: 34px; height: 34px; border-color: var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); }
+      .nav-button:hover { background: color-mix(in srgb, var(--green) 8%, var(--paper)); }
+      .day-heading { padding-top: 20px; padding-bottom: 19px; }
+      .time-column, .day-column { height: 676px; }
+      .time-label { height: 56px; }
+      .day-column { background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 55px, var(--grid-line) 55px, var(--grid-line) 56px); }
+      .course-card { border-radius: 12px; box-shadow: 0 4px 12px rgba(35, 44, 35, .07); }
+      .course-card:hover { box-shadow: 0 8px 20px rgba(35, 44, 35, .12); }
+      .course-name { font-size: 11px; }
+      .semester-panel { margin-bottom: 0; padding: 20px; }
+      .semester-header { align-items: flex-start; flex-direction: column; gap: 15px; }
+      .semester-heading { font-size: 15px; }
+      .semester-controls { width: 100%; }
+      .semester-field:not(.weeks) { flex: 1; }
+      .semester-field input { width: 100%; }
+      .semester-progress-row { align-items: center; gap: 11px; }
+      .semester-progress { height: 10px; }
+      .semester-progress-label { min-width: 120px; font-size: 10px; font-weight: 700; }
+      .form-panel { padding: 22px; }
+      .panel-heading h2 { font-size: 16px; }
+      .field label { color: var(--muted); }
+      .field input, .field select, .semester-field input, .calendar-end-field input, .study-form input {
+        border-color: var(--line);
+        border-radius: 11px;
+      }
+      .summary-card { padding: 17px 19px; }
+      .summary-icon { border-radius: 13px; }
+      .study-grid { gap: 20px; }
+      .study-card { padding: 25px; }
+      .study-card-heading { margin-bottom: 21px; }
+      .study-card-heading h2 { font-size: 17px; }
+      .pomodoro-clock { width: 190px; }
+      .pomodoro-clock-inner { width: calc(100% - 15px); }
+      .chime-toggle {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--muted);
+        font-size: 10px;
+        cursor: pointer;
+      }
+      .chime-toggle input { width: 15px; height: 15px; margin: 0; accent-color: var(--green); }
+      .chime-icon { color: var(--green); font-size: 16px; }
+      .notes-hero { align-items: end; }
+      .notes-save-status { display: inline-flex; align-items: center; gap: 8px; padding: 10px 13px; border: 1px solid var(--panel-border); border-radius: 99px; background: color-mix(in srgb, var(--paper) 75%, transparent); color: var(--muted); font-size: 11px; }
+      .notes-save-dot, .preview-live span { width: 8px; height: 8px; border-radius: 50%; background: #79a96c; }
+      .notes-save-status[data-state="saving"] .notes-save-dot { background: #d4a348; animation: pulse 1s infinite; }
+      .notes-save-status[data-state="error"] .notes-save-dot { background: #bd5a4d; }
+      .notes-workspace { overflow: hidden; background: color-mix(in srgb, var(--paper) 90%, transparent); }
+      .notes-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 21px 24px; border-bottom: 1px solid var(--line); }
+      .note-title-field { display: grid; gap: 7px; width: min(100%, 380px); }
+      .note-title-field span, .note-pane-kicker { color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: 1.6px; }
+      .note-title-field input { width: 100%; padding: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 700 20px "Manrope", sans-serif; }
+      .note-title-field input:focus { box-shadow: 0 2px 0 var(--green); }
+      .notes-downloads { display: flex; gap: 9px; }
+      .notes-downloads .button { white-space: nowrap; }
+      .notes-downloads .button span { margin-right: 7px; font-size: 16px; }
+      .notes-editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1px; background: var(--line); }
+      .note-pane { min-width: 0; min-height: 490px; padding: 25px; background: var(--paper); }
+      .note-pane-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
+      .note-pane-heading h2 { margin: 6px 0 0; font: 700 18px "Manrope", sans-serif; letter-spacing: -.5px; }
+      .markdown-badge, .preview-live { display: inline-flex; align-items: center; gap: 7px; padding: 7px 9px; border-radius: 7px; background: color-mix(in srgb, var(--green) 8%, var(--paper)); color: var(--green); font-size: 8px; font-weight: 700; letter-spacing: 1px; white-space: nowrap; }
+      .preview-live span { width: 6px; height: 6px; }
+      .note-editor { display: block; width: 100%; min-height: 360px; resize: vertical; padding: 20px; border: 1px solid var(--line); border-radius: 15px; outline: 0; background: color-mix(in srgb, var(--canvas) 60%, var(--paper)); color: var(--ink); font: 13px/1.85 ui-monospace, SFMono-Regular, Consolas, monospace; transition: border-color .2s, box-shadow .2s; }
+      .note-editor:focus { border-color: color-mix(in srgb, var(--green) 50%, var(--line)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 9%, transparent); }
+      .note-editor::placeholder { color: color-mix(in srgb, var(--muted) 75%, transparent); }
+      .note-editor-footer { display: flex; justify-content: space-between; gap: 12px; padding: 11px 2px 0; color: var(--muted); font-size: 10px; }
+      .markdown-preview { min-height: 360px; padding: 8px 3px; color: var(--ink); font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
+      .markdown-preview h1, .markdown-preview h2, .markdown-preview h3 { margin: 0 0 12px; font-family: "Manrope", sans-serif; letter-spacing: -.7px; }
+      .markdown-preview h1 { font-size: 27px; }
+      .markdown-preview h2 { font-size: 22px; }
+      .markdown-preview h3 { font-size: 17px; }
+      .markdown-preview p { margin: 0 0 14px; }
+      .markdown-preview ul, .markdown-preview ol { display: grid; gap: 6px; margin: 0 0 16px; padding-left: 22px; }
+      .markdown-preview li::marker { color: var(--green); }
+      .markdown-preview blockquote { margin: 0 0 15px; padding: 4px 0 4px 14px; border-left: 3px solid var(--green); color: var(--muted); }
+      .markdown-preview a { color: var(--green); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+      .markdown-preview code { padding: 2px 5px; border-radius: 5px; background: color-mix(in srgb, var(--green) 9%, var(--paper)); font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; }
+      .markdown-preview pre { overflow-x: auto; margin: 0 0 15px; padding: 14px; border-radius: 12px; background: color-mix(in srgb, var(--green) 7%, var(--paper)); }
+      .markdown-preview pre code { padding: 0; background: none; }
+      .markdown-preview hr { margin: 18px 0; border: 0; border-top: 1px solid var(--line); }
+      .markdown-empty { color: var(--muted); font-style: italic; }
+      .notes-privacy { display: flex; align-items: center; gap: 8px; margin: 0; padding: 15px 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+      .notes-privacy span { color: var(--green); }
+      @keyframes pulse { 50% { opacity: .4; } }
+      @media (max-width: 760px) {
+        .app-tabs { max-width: 100%; }
+        .app-tab { min-width: auto; flex: 1; padding-right: 15px; padding-left: 15px; }
+        .notes-hero { display: flex; align-items: start; gap: 14px; flex-direction: column; }
+        .notes-toolbar { align-items: stretch; flex-direction: column; }
+        .note-title-field { width: 100%; }
+        .notes-downloads .button { flex: 1; }
+        .notes-editor-grid { grid-template-columns: 1fr; }
+        .note-pane { min-height: 0; padding: 20px; }
+        .note-preview-pane { min-height: 260px; }
+        .note-editor, .markdown-preview { min-height: 280px; }
+      }
+      @media (max-width: 430px) {
+        .topbar-right { gap: 9px; }
+        .notes-downloads { flex-direction: column; }
+      }
       @page { size: A4 landscape; margin: 8mm; }
       @media print {
         body { min-width: 0; background: white; color: #222; font-family: Arial, sans-serif; }
