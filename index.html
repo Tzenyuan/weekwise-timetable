@@ -101,6 +101,13 @@
                   <input id="course-name" name="name" placeholder="e.g. Introduction to Design" maxlength="120" required />
                 </div>
                 <div class="field">
+                  <label for="course-type">Class type</label>
+                  <select id="course-type" name="type">
+                    <option value="lecture">Lecture</option>
+                    <option value="tutorial">Tutorial</option>
+                  </select>
+                </div>
+                <div class="field">
                   <label for="course-format">Class format</label>
                   <select id="course-format" name="format">
                     <option value="physical">In person</option>
@@ -192,8 +199,9 @@
                 <label class="chime-toggle" for="pomodoro-chime">
                   <input id="pomodoro-chime" type="checkbox" checked />
                   <span class="chime-icon" aria-hidden="true">♫</span>
-                  Play a gentle chime when a session ends
+                  Play a ringtone when a session ends
                 </label>
+                <button class="chime-preview-button" id="pomodoro-chime-preview" type="button">▶ Preview ringtone</button>
               </div>
             </section>
             <section class="study-card wide" aria-labelledby="todos-heading">
@@ -213,17 +221,17 @@
             <div>
               <p class="eyebrow">A quiet place for your thoughts</p>
               <h1>Study notes</h1>
-              <p class="hero-copy">Write in Markdown, keep it close, and take it with you.</p>
+              <p class="hero-copy">Write naturally, format what matters, and take your notes with you.</p>
             </div>
             <div class="notes-save-status" id="notes-save-status" role="status">
               <span class="notes-save-dot"></span>
               <span id="notes-save-label">Saved in this browser</span>
             </div>
           </div>
-          <section class="notes-workspace" aria-label="Markdown note editor">
+          <section class="notes-workspace" aria-label="Rich text note editor">
             <div class="notes-toolbar">
               <label class="note-title-field" for="note-title">
-                <span>NOTE TITLE</span>
+                <span>NOTE FILE NAME</span>
                 <input id="note-title" type="text" maxlength="80" value="My study notes" aria-label="Note file name" />
               </label>
               <div class="notes-downloads">
@@ -231,23 +239,22 @@
                 <button class="button button-primary" id="download-md-button" type="button"><span aria-hidden="true">↓</span> Markdown</button>
               </div>
             </div>
-            <div class="notes-editor-grid">
-              <section class="note-pane" aria-labelledby="note-write-heading">
-                <div class="note-pane-heading">
-                  <div><span class="note-pane-kicker">01 / WRITE</span><h2 id="note-write-heading">Your note</h2></div>
-                  <span class="markdown-badge">MARKDOWN</span>
-                </div>
-                <textarea id="note-content" class="note-editor" aria-label="Write your note in Markdown" spellcheck="true" placeholder="# Today's notes&#10;&#10;Capture an idea, a lecture summary, or a plan for what comes next.&#10;&#10;Use **bold**, *italics*, lists, links, and code."></textarea>
-                <div class="note-editor-footer"><span>Autosaves as you type</span><span id="note-word-count">0 words</span></div>
-              </section>
-              <section class="note-pane note-preview-pane" aria-labelledby="note-preview-heading">
-                <div class="note-pane-heading">
-                  <div><span class="note-pane-kicker">02 / PREVIEW</span><h2 id="note-preview-heading">A little perspective</h2></div>
-                  <span class="preview-live"><span></span> LIVE</span>
-                </div>
-                <article id="note-preview" class="markdown-preview" aria-live="polite"></article>
-              </section>
-            </div>
+            <section class="note-pane" aria-labelledby="note-write-heading">
+              <div class="note-pane-heading">
+                <div><span class="note-pane-kicker">WRITE FREELY</span><h2 id="note-write-heading">Your note</h2></div>
+                <span class="note-editor-badge">RICH TEXT</span>
+              </div>
+              <div class="note-format-toolbar" role="toolbar" aria-label="Text formatting">
+                <button type="button" class="note-format-button" data-command="bold" aria-label="Bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+                <button type="button" class="note-format-button" data-command="italic" aria-label="Italic" title="Italic (Ctrl+I)"><em>I</em></button>
+                <button type="button" class="note-format-button" data-command="underline" aria-label="Underline" title="Underline (Ctrl+U)"><u>U</u></button>
+                <span class="note-format-divider" aria-hidden="true"></span>
+                <button type="button" class="note-format-button" data-command="insertUnorderedList" aria-label="Bulleted list" title="Bulleted list">•</button>
+                <button type="button" class="note-format-button" data-command="insertOrderedList" aria-label="Numbered list" title="Numbered list">1.</button>
+              </div>
+              <div id="note-content" class="note-editor" role="textbox" aria-label="Write your note" aria-multiline="true" contenteditable="true" spellcheck="true" data-placeholder="Write anything… select text to format it."></div>
+              <div class="note-editor-footer"><span>Autosaves as you type</span><span id="note-word-count">0 words</span></div>
+            </section>
             <p class="notes-privacy"><span aria-hidden="true">✦</span> Your notes stay in this browser unless you download them.</p>
           </section>
         </section>

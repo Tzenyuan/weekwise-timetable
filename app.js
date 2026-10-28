@@ -1,8 +1,9 @@
       (() => {
         const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
         const palette = [
-          "#668b70", "#4c7899", "#98655b", "#9270a1", "#b18648", "#54877e",
-          "#bd6470", "#5868a0", "#82934c", "#c67c4b", "#466a64", "#6b7080"
+          "#D94F70", "#E36B2C", "#D1A000", "#5E9B3D", "#159889", "#1683B5",
+          "#4969D5", "#7554C8", "#B34B9B", "#A74343", "#5C7C94", "#809522",
+          "#F08C46", "#CC3D3D", "#00A7A7", "#4466AA", "#8B5CF6", "#C026D3"
         ];
         const storageKey = "weekwise-courses-v1";
         const weekendStorageKey = "weekwise-weekends-v1";
@@ -23,6 +24,7 @@
         const error = document.getElementById("form-error");
         const toast = document.getElementById("toast");
         const courseName = document.getElementById("course-name");
+        const courseType = document.getElementById("course-type");
         const courseVenue = document.getElementById("course-venue");
         const courseDay = document.getElementById("course-day");
         const courseStart = document.getElementById("course-start");
@@ -55,7 +57,9 @@
         const semesterSettings = loadSemesterSettings();
         const savedNote = loadNote();
         noteTitleInput.value = savedNote.title;
-        noteContentInput.value = savedNote.content;
+        noteContentInput.innerHTML = savedNote.format === "rich-html"
+          ? sanitizeNoteHtml(savedNote.content)
+          : markdownToSafeHtml(savedNote.content);
         pomodoroChimeToggle.checked = readPreference(chimeStorageKey) !== "false";
         weekendToggle.checked = weekendPreference === "true";
         semesterStartInput.value = semesterSettings.start;
@@ -74,11 +78,12 @@
             const saved = JSON.parse(localStorage.getItem(notesStorageKey) || "null");
             return {
               title: typeof saved?.title === "string" ? saved.title.slice(0, 80) : "My study notes",
-              content: typeof saved?.content === "string" ? saved.content : ""
+              content: typeof saved?.content === "string" ? saved.content : "",
+              format: saved?.format === "rich-html" ? "rich-html" : "markdown"
             };
           } catch (storageError) {
             console.error("Could not load saved notes.", storageError);
-            return { title: "My study notes", content: "" };
+            return { title: "My study notes", content: "", format: "rich-html" };
           }
         }
         function loadCourses() {
@@ -133,6 +138,7 @@
               minutes(item.start) >= 8 * 60 && minutes(item.end) <= 20 * 60 && minutes(item.end) > minutes(item.start)
             ).map(item => ({
               ...item,
+              type: item.type === "tutorial" ? "tutorial" : "lecture",
               format: item.format === "online" ? "online" : "physical",
               color: validColor(item.color) ? item.color : colorForName(item.name)
             }));
@@ -183,13 +189,13 @@
           clearTimeout(noteSaveTimer);
           notesSaveStatus.dataset.state = "saving";
           notesSaveLabel.textContent = "Saving…";
-          renderNotePreview();
           renderNoteWordCount();
           noteSaveTimer = setTimeout(() => {
             try {
               localStorage.setItem(notesStorageKey, JSON.stringify({
                 title: noteTitleInput.value,
-                content: noteContentInput.value
+                content: sanitizeNoteHtml(noteContentInput.innerHTML),
+                format: "rich-html"
               }));
               notesSaveStatus.dataset.state = "saved";
               notesSaveLabel.textContent = "Saved in this browser";
@@ -270,6 +276,32 @@
           monday.setDate(monday.getDate() + dayIndex);
           return monday;
         }
+        function sanitizeNoteHtml(html) {
+          const template = document.createElement("template");
+          template.innerHTML = html;
+          const allowed = new Set(["A", "B", "BLOCKQUOTE", "BR", "CODE", "DIV", "EM", "H1", "H2", "H3", "HR", "I", "LI", "OL", "P", "PRE", "S", "STRONG", "U", "UL"]);
+          const clean = node => {
+            if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent);
+            if (node.nodeType !== Node.ELEMENT_NODE) return document.createDocumentFragment();
+            if (["SCRIPT", "STYLE", "IFRAME", "OBJECT", "SVG", "MATH"].includes(node.tagName)) return document.createDocumentFragment();
+            const children = [...node.childNodes].map(clean);
+            if (!allowed.has(node.tagName)) {
+              const fragment = document.createDocumentFragment();
+              children.forEach(child => fragment.appendChild(child));
+              return fragment;
+            }
+            const element = document.createElement(node.tagName.toLowerCase());
+            if (node.tagName === "A") {
+              const href = node.getAttribute("href") || "";
+              if (/^(https?:|mailto:)/i.test(href)) element.setAttribute("href", href);
+            }
+            children.forEach(child => element.appendChild(child));
+            return element;
+          };
+          const container = document.createElement("div");
+          [...template.content.childNodes].map(clean).forEach(node => container.appendChild(node));
+          return container.innerHTML;
+        }
         function appendInlineMarkdown(parent, text) {
           const pattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)|\*\*(.+?)\*\*|__(.+?)__|\*(.+?)\*|_(.+?)_|`([^`]+)`/g;
           let cursor = 0;
@@ -279,17 +311,8 @@
             if (match[2]) {
               const link = document.createElement("a");
               link.textContent = match[1];
-              const url = new URL(match[2], window.location.href);
-              if (["http:", "https:", "mailto:"].includes(url.protocol)) {
-                link.href = url.href;
-                if (url.protocol !== "mailto:") {
-                  link.target = "_blank";
-                  link.rel = "noopener noreferrer";
-                }
-                parent.appendChild(link);
-              } else {
-                parent.appendChild(document.createTextNode(match[0]));
-              }
+              link.setAttribute("href", match[2]);
+              parent.appendChild(link);
             } else {
               const element = document.createElement(match[3] || match[4] ? "strong" : match[5] || match[6] ? "em" : "code");
               element.textContent = match[3] || match[4] || match[5] || match[6] || match[7];
@@ -299,17 +322,8 @@
           }
           parent.appendChild(document.createTextNode(text.slice(cursor)));
         }
-        function renderNotePreview() {
-          const preview = document.getElementById("note-preview");
-          preview.replaceChildren();
-          const source = noteContentInput.value;
-          if (!source.trim()) {
-            const empty = document.createElement("p");
-            empty.className = "markdown-empty";
-            empty.textContent = "Your ideas will find their shape here.";
-            preview.appendChild(empty);
-            return;
-          }
+        function markdownToSafeHtml(markdown) {
+          const container = document.createElement("div");
           let paragraph = [];
           let list = null;
           let codeLines = null;
@@ -317,79 +331,99 @@
             if (!paragraph.length) return;
             const element = document.createElement("p");
             appendInlineMarkdown(element, paragraph.join(" "));
-            preview.appendChild(element);
+            container.appendChild(element);
             paragraph = [];
           };
           const stopList = () => { list = null; };
-          source.split(/\r?\n/).forEach(line => {
+          (markdown || "").split(/\r?\n/).forEach(line => {
             if (line.trimStart().startsWith("```")) {
               flushParagraph();
               stopList();
               if (codeLines) {
                 const pre = document.createElement("pre");
-                const code = document.createElement("code");
-                code.textContent = codeLines.join("\n");
-                pre.appendChild(code);
-                preview.appendChild(pre);
+                pre.textContent = codeLines.join("\n");
+                container.appendChild(pre);
                 codeLines = null;
-              } else {
-                codeLines = [];
-              }
+              } else codeLines = [];
               return;
             }
-            if (codeLines) {
-              codeLines.push(line);
-              return;
-            }
+            if (codeLines) { codeLines.push(line); return; }
             const heading = line.match(/^(#{1,3})\s+(.+)$/);
             const unordered = line.match(/^\s*[-*+]\s+(.+)$/);
             const ordered = line.match(/^\s*\d+\.\s+(.+)$/);
             const quote = line.match(/^\s*>\s?(.*)$/);
             if (heading) {
-              flushParagraph();
-              stopList();
+              flushParagraph(); stopList();
               const element = document.createElement(`h${heading[1].length}`);
-              appendInlineMarkdown(element, heading[2]);
-              preview.appendChild(element);
+              appendInlineMarkdown(element, heading[2]); container.appendChild(element);
             } else if (unordered || ordered) {
               flushParagraph();
               const kind = unordered ? "ul" : "ol";
               if (!list || list.tagName.toLowerCase() !== kind) {
-                list = document.createElement(kind);
-                preview.appendChild(list);
+                list = document.createElement(kind); container.appendChild(list);
               }
               const item = document.createElement("li");
-              appendInlineMarkdown(item, (unordered || ordered)[1]);
-              list.appendChild(item);
+              appendInlineMarkdown(item, (unordered || ordered)[1]); list.appendChild(item);
             } else if (quote) {
-              flushParagraph();
-              stopList();
+              flushParagraph(); stopList();
               const element = document.createElement("blockquote");
-              appendInlineMarkdown(element, quote[1]);
-              preview.appendChild(element);
+              appendInlineMarkdown(element, quote[1]); container.appendChild(element);
             } else if (/^\s*---+\s*$/.test(line)) {
-              flushParagraph();
-              stopList();
-              preview.appendChild(document.createElement("hr"));
+              flushParagraph(); stopList(); container.appendChild(document.createElement("hr"));
             } else if (!line.trim()) {
-              flushParagraph();
-              stopList();
+              flushParagraph(); stopList();
             } else {
-              stopList();
-              paragraph.push(line.trim());
+              stopList(); paragraph.push(line.trim());
             }
           });
           flushParagraph();
           if (codeLines) {
             const pre = document.createElement("pre");
-            const code = document.createElement("code");
-            code.textContent = codeLines.join("\n");
-            pre.appendChild(code);
-            preview.appendChild(pre);
+            pre.textContent = codeLines.join("\n");
+            container.appendChild(pre);
+          }
+          return sanitizeNoteHtml(container.innerHTML);
+        }
+        function markdownInlineFromNode(node) {
+          if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+          if (node.nodeType !== Node.ELEMENT_NODE) return "";
+          const content = [...node.childNodes].map(markdownInlineFromNode).join("");
+          switch (node.tagName) {
+            case "B":
+            case "STRONG": return `**${content}**`;
+            case "I":
+            case "EM": return `*${content}*`;
+            case "U": return `<u>${content}</u>`;
+            case "S": return `~~${content}~~`;
+            case "CODE": return `\`${content}\``;
+            case "A": return `[${content}](${node.getAttribute("href") || ""})`;
+            case "BR": return "  \n";
+            default: return content;
           }
         }
+        function noteAsMarkdown() {
+          const container = document.createElement("div");
+          container.innerHTML = sanitizeNoteHtml(noteContentInput.innerHTML);
+          return [...container.childNodes].map(node => {
+            if (node.nodeType === Node.TEXT_NODE) return node.textContent.trim();
+            if (node.nodeType !== Node.ELEMENT_NODE) return "";
+            const content = [...node.childNodes].map(markdownInlineFromNode).join("").trim();
+            switch (node.tagName) {
+              case "H1": return `# ${content}`;
+              case "H2": return `## ${content}`;
+              case "H3": return `### ${content}`;
+              case "UL": return [...node.children].map((item, index) => `- ${[...item.childNodes].map(markdownInlineFromNode).join("").trim()}`).join("\n");
+              case "OL": return [...node.children].map((item, index) => `${index + 1}. ${[...item.childNodes].map(markdownInlineFromNode).join("").trim()}`).join("\n");
+              case "BLOCKQUOTE": return content.split("\n").map(line => `> ${line}`).join("\n");
+              case "PRE": return `\`\`\`\n${node.textContent}\n\`\`\``;
+              case "HR": return "---";
+              case "BR": return "";
+              default: return content;
+            }
+          }).filter(Boolean).join("\n\n");
+        }
         function renderNoteWordCount() {
-          const words = noteContentInput.value.trim().match(/\S+/g)?.length || 0;
+          const words = noteContentInput.innerText.trim().match(/\S+/g)?.length || 0;
           document.getElementById("note-word-count").textContent = `${words} word${words === 1 ? "" : "s"}`;
         }
         function downloadNote(extension) {
@@ -398,7 +432,8 @@
             .replace(/\s+/g, "-")
             .replace(/[. ]+$/g, "")
             .slice(0, 80) || "study-notes";
-          const blob = new Blob([noteContentInput.value], { type: "text/plain;charset=utf-8" });
+          const content = extension === "md" ? noteAsMarkdown() : noteContentInput.innerText.replace(/\n{3,}/g, "\n\n").trim();
+          const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;
@@ -459,20 +494,22 @@
             dayCourses.forEach(course => {
               const start = minutes(course.start);
               const end = minutes(course.end);
-              const top = (start - 8 * 60) / 60 * 52;
-              const height = Math.max((end - start) / 60 * 52 - 4, 36);
+              const pixelsPerMinute = 56 / 60;
+              const top = (start - 8 * 60) * pixelsPerMinute;
+              const height = (end - start) * pixelsPerMinute;
               const color = colorForCourse(course);
               const card = document.createElement("button");
               card.type = "button";
               card.className = "course-card" + (height < 58 ? " compact" : "");
-              card.style.cssText = `top:${top}px;height:${height}px;--course-bg:color-mix(in srgb, ${color} 19%, var(--paper));--course-color:${color};--course-text:var(--ink)`;
+              card.style.cssText = `--course-start-offset:${start - 8 * 60};--course-duration:${end - start};--course-bg:color-mix(in srgb, ${color} 27%, var(--paper));--course-color:${color};--course-text:var(--ink)`;
               card.style.animationDelay = `${dayCourses.indexOf(course) * 35}ms`;
               card.dataset.courseId = course.id;
               const formatLabel = course.format === "online" ? "Online" : "In person";
-              card.setAttribute("aria-label", `${course.name}, ${formatLabel}, ${course.start} to ${course.end}, ${course.venue}. Select to edit.`);
+              const typeLabel = course.type === "tutorial" ? "Tutorial" : "Lecture";
+              card.setAttribute("aria-label", `${course.name}, ${typeLabel}, ${formatLabel}, ${course.start} to ${course.end}, ${course.venue}. Select to edit.`);
               card.innerHTML = `<div class="course-name"></div><div class="course-meta"></div>`;
               card.querySelector(".course-name").textContent = course.name;
-              card.querySelector(".course-meta").textContent = `${formatLabel} · ${formatTime(course.start)} – ${formatTime(course.end)} · ${course.venue}`;
+              card.querySelector(".course-meta").textContent = `${typeLabel} · ${formatLabel} · ${formatTime(course.start)} – ${formatTime(course.end)} · ${course.venue}`;
               card.addEventListener("click", () => editCourse(course.id));
               column.appendChild(card);
             });
@@ -631,38 +668,43 @@
           const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
           if (!AudioContextConstructor) {
             showToast("This browser does not support the focus timer chime.");
-            return;
+            return Promise.resolve(false);
           }
           try {
             if (!audioContext) audioContext = new AudioContextConstructor();
             if (audioContext.state === "suspended") {
-              audioContext.resume().catch(audioError => {
+              return audioContext.resume().then(() => audioContext.state === "running").catch(audioError => {
                 console.error("Could not enable the Pomodoro chime.", audioError);
                 showToast("Allow audio in your browser to hear the timer chime.");
+                return false;
               });
             }
+            return Promise.resolve(audioContext.state === "running");
           } catch (audioError) {
             console.error("Could not enable the Pomodoro chime.", audioError);
             showToast("Could not enable the timer chime in this browser.");
+            return Promise.resolve(false);
           }
         }
         function playPomodoroChime() {
           if (!audioContext || audioContext.state !== "running") return;
-          const notes = [659.25, 783.99, 987.77];
+          const notes = [880, 1174.66, 1396.91, 1760, 1396.91, 1760];
           const startAt = audioContext.currentTime;
           notes.forEach((frequency, index) => {
-            const oscillator = audioContext.createOscillator();
-            const volume = audioContext.createGain();
-            const noteStart = startAt + index * 0.28;
-            oscillator.type = "sine";
-            oscillator.frequency.value = frequency;
-            volume.gain.setValueAtTime(0.0001, noteStart);
-            volume.gain.exponentialRampToValueAtTime(0.12, noteStart + 0.025);
-            volume.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.62);
-            oscillator.connect(volume);
-            volume.connect(audioContext.destination);
-            oscillator.start(noteStart);
-            oscillator.stop(noteStart + 0.64);
+            const noteStart = startAt + index * 0.3;
+            [[frequency, "sine", 0.3], [frequency * 2, "triangle", 0.08]].forEach(([tone, shape, peak]) => {
+              const oscillator = audioContext.createOscillator();
+              const volume = audioContext.createGain();
+              oscillator.type = shape;
+              oscillator.frequency.value = tone;
+              volume.gain.setValueAtTime(0.0001, noteStart);
+              volume.gain.exponentialRampToValueAtTime(peak, noteStart + 0.025);
+              volume.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.48);
+              oscillator.connect(volume);
+              volume.connect(audioContext.destination);
+              oscillator.start(noteStart);
+              oscillator.stop(noteStart + 0.5);
+            });
           });
         }
         function tickPomodoro() {
@@ -710,6 +752,7 @@
           }
           editingId = id;
           courseName.value = course.name;
+          courseType.value = course.type || "lecture";
           courseVenue.value = course.venue;
           courseDay.value = String(course.day);
           courseStart.value = course.start;
@@ -800,7 +843,7 @@
               `RRULE:FREQ=WEEKLY;BYDAY=${dayCodes[course.day]}${untilRule}`,
               `SUMMARY:${icalEscape(course.name)}`,
               `LOCATION:${icalEscape(course.venue)}`,
-              `DESCRIPTION:${icalEscape(`${course.format === "online" ? "Online class" : "In-person class"} at ${course.venue}`)}`,
+              `DESCRIPTION:${icalEscape(`${course.type === "tutorial" ? "Tutorial" : "Lecture"} · ${course.format === "online" ? "Online class" : "In-person class"} at ${course.venue}`)}`,
               "END:VEVENT"
             );
           });
@@ -820,6 +863,7 @@
         form.addEventListener("submit", event => {
           event.preventDefault();
           const name = courseName.value.trim();
+          const type = courseType.value === "tutorial" ? "tutorial" : "lecture";
           const venue = courseVenue.value.trim();
           const format = courseFormat.value === "online" ? "online" : "physical";
           const color = editingId ? selectedCourseColor : selectedColorForName(name, selectedCourseColor);
@@ -857,11 +901,11 @@
           if (editingId) {
             const updatedName = name.toLocaleLowerCase();
             courses = courses.map(course => {
-              if (course.id === editingId) return { ...course, name, venue, format, day, start, end, color };
+              if (course.id === editingId) return { ...course, name, type, venue, format, day, start, end, color };
               return course.name.trim().toLocaleLowerCase() === updatedName ? { ...course, color } : course;
             });
           } else {
-            courses.push({ id: crypto.randomUUID(), name, venue, format, day, start, end, color: selectedColorForName(name, color) });
+            courses.push({ id: crypto.randomUUID(), name, type, venue, format, day, start, end, color: selectedColorForName(name, color) });
           }
           courses.sort((a, b) => a.day - b.day || minutes(a.start) - minutes(b.start));
           saveCourses();
@@ -895,7 +939,21 @@
           const pages = { "#study-hub": "study", "#notes": "notes" };
           showPage(pages[window.location.hash] || "planner");
         });
-        [noteTitleInput, noteContentInput].forEach(input => input.addEventListener("input", saveNote));
+        noteTitleInput.addEventListener("input", saveNote);
+        noteContentInput.addEventListener("input", saveNote);
+        noteContentInput.addEventListener("paste", event => {
+          event.preventDefault();
+          const text = event.clipboardData?.getData("text/plain") || "";
+          document.execCommand("insertText", false, text);
+        });
+        document.querySelectorAll(".note-format-button").forEach(button => {
+          button.addEventListener("mousedown", event => event.preventDefault());
+          button.addEventListener("click", () => {
+            noteContentInput.focus();
+            document.execCommand(button.dataset.command, false, null);
+            saveNote();
+          });
+        });
         document.getElementById("download-txt-button").addEventListener("click", () => downloadNote("txt"));
         document.getElementById("download-md-button").addEventListener("click", () => downloadNote("md"));
         document.getElementById("exam-form").addEventListener("submit", event => {
@@ -933,6 +991,11 @@
             timerInterval = setInterval(tickPomodoro, 250);
           }
           renderPomodoro();
+        });
+        document.getElementById("pomodoro-chime-preview").addEventListener("click", () => {
+          preparePomodoroAudio().then(ready => {
+            if (ready) playPomodoroChime();
+          });
         });
         document.getElementById("pomodoro-reset").addEventListener("click", () => {
           timerRunning = false;
@@ -1000,8 +1063,9 @@
           } else if (event.key === notesStorageKey) {
             const note = loadNote();
             noteTitleInput.value = note.title;
-            noteContentInput.value = note.content;
-            renderNotePreview();
+            noteContentInput.innerHTML = note.format === "rich-html"
+              ? sanitizeNoteHtml(note.content)
+              : markdownToSafeHtml(note.content);
             renderNoteWordCount();
           } else if (event.key === chimeStorageKey) {
             pomodoroChimeToggle.checked = event.newValue !== "false";
@@ -1015,7 +1079,6 @@
         renderExams();
         renderTodos();
         renderPomodoro();
-        renderNotePreview();
         renderNoteWordCount();
         showPage(({ "#study-hub": "study", "#notes": "notes" })[window.location.hash] || "planner");
         setInterval(renderExams, 60000);

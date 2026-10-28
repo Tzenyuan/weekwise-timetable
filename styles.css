@@ -128,21 +128,27 @@
       .day-heading strong { display: block; margin-top: 5px; color: var(--ink); font: 700 15px "Manrope", sans-serif; letter-spacing: 0; }
       .day-heading.today strong { color: white; background: var(--green); width: 27px; height: 27px; margin: 2px auto 0; border-radius: 50%; display: grid; place-items: center; }
       .calendar-body { display: grid; grid-template-columns: 57px repeat(5, minmax(105px, 1fr)); position: relative; }
-      .time-column, .day-column { height: 624px; position: relative; }
-      .time-label { height: 52px; padding: 0 7px; position: relative; top: -7px; text-align: right; color: #969990; font-size: 10px; }
-      .day-column { border-left: 1px solid var(--column-line); background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 51px, var(--grid-line) 51px, var(--grid-line) 52px); }
+      .time-column, .day-column { height: calc(12 * var(--hour-height)); position: relative; }
+      .time-label { height: var(--hour-height); padding: 0 7px; position: relative; top: -7px; text-align: right; color: #969990; font-size: 10px; }
+      .day-column {
+        border-left: 1px solid var(--column-line);
+        background-image:
+          repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--hour-height) - 1px), var(--grid-line) calc(var(--hour-height) - 1px), var(--grid-line) var(--hour-height)),
+          repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--hour-height) / 4 - 1px), var(--column-line) calc(var(--hour-height) / 4 - 1px), var(--column-line) calc(var(--hour-height) / 4));
+      }
       .day-column:nth-child(2) { border-left: 0; }
       .course-card {
-        position: absolute; left: 5px; right: 5px; min-height: 38px; padding: 8px 8px 6px 10px;
+        position: absolute; top: calc(var(--course-start-offset) * var(--minute-height)); height: calc(var(--course-duration) * var(--minute-height)); left: 5px; right: 5px; padding: 5px 7px 4px 9px;
         border-radius: 8px; overflow: hidden; border-left: 3px solid var(--course-color);
         background: var(--course-bg); color: var(--course-text); animation: card-in .36s cubic-bezier(.2,.8,.2,1) both;
         transition: filter .18s, transform .18s;
       }
-      .course-card:hover { filter: saturate(1.12); transform: translateY(-2px); z-index: 3; }
+      .course-card:hover { filter: saturate(1.12); z-index: 3; }
       .course-name { font-size: 11px; font-weight: 700; line-height: 1.3; }
       .course-meta { margin-top: 4px; font-size: 9px; opacity: .78; line-height: 1.35; }
-      .course-card.compact { padding-top: 6px; }
-      .course-card.compact .course-meta { margin-top: 2px; }
+      .course-card.compact { padding-top: 5px; padding-bottom: 3px; }
+      .course-card.compact .course-meta { display: none; }
+      .course-card.compact .course-name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
       .empty-state {
         position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
         color: #9b9d96; font-size: 12px; text-align: center; line-height: 1.7;
@@ -284,6 +290,8 @@
         --lime: #d7edbd;
         --panel-border: rgba(67, 87, 67, .1);
         --shadow: 0 22px 65px rgba(48, 65, 48, .075);
+        --hour-height: 56px;
+        --minute-height: .933333px;
       }
       body {
         background:
@@ -319,9 +327,8 @@
       .nav-button { width: 34px; height: 34px; border-color: var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); }
       .nav-button:hover { background: color-mix(in srgb, var(--green) 8%, var(--paper)); }
       .day-heading { padding-top: 20px; padding-bottom: 19px; }
-      .time-column, .day-column { height: 676px; }
-      .time-label { height: 56px; }
-      .day-column { background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 55px, var(--grid-line) 55px, var(--grid-line) 56px); }
+      .time-column, .day-column { height: calc(12 * var(--hour-height)); }
+      .time-label { height: var(--hour-height); }
       .course-card { border-radius: 12px; box-shadow: 0 4px 12px rgba(35, 44, 35, .07); }
       .course-card:hover { box-shadow: 0 8px 20px rgba(35, 44, 35, .12); }
       .course-name { font-size: 11px; }
@@ -359,9 +366,11 @@
       }
       .chime-toggle input { width: 15px; height: 15px; margin: 0; accent-color: var(--green); }
       .chime-icon { color: var(--green); font-size: 16px; }
+      .chime-preview-button { padding: 7px 12px; border: 1px solid var(--line); border-radius: 9px; background: color-mix(in srgb, var(--green) 8%, var(--paper)); color: var(--green); font-size: 10px; font-weight: 700; }
+      .chime-preview-button:hover { background: color-mix(in srgb, var(--green) 15%, var(--paper)); }
       .notes-hero { align-items: end; }
       .notes-save-status { display: inline-flex; align-items: center; gap: 8px; padding: 10px 13px; border: 1px solid var(--panel-border); border-radius: 99px; background: color-mix(in srgb, var(--paper) 75%, transparent); color: var(--muted); font-size: 11px; }
-      .notes-save-dot, .preview-live span { width: 8px; height: 8px; border-radius: 50%; background: #79a96c; }
+      .notes-save-dot { width: 8px; height: 8px; border-radius: 50%; background: #79a96c; }
       .notes-save-status[data-state="saving"] .notes-save-dot { background: #d4a348; animation: pulse 1s infinite; }
       .notes-save-status[data-state="error"] .notes-save-dot { background: #bd5a4d; }
       .notes-workspace { overflow: hidden; background: color-mix(in srgb, var(--paper) 90%, transparent); }
@@ -373,31 +382,22 @@
       .notes-downloads { display: flex; gap: 9px; }
       .notes-downloads .button { white-space: nowrap; }
       .notes-downloads .button span { margin-right: 7px; font-size: 16px; }
-      .notes-editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1px; background: var(--line); }
       .note-pane { min-width: 0; min-height: 490px; padding: 25px; background: var(--paper); }
       .note-pane-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
       .note-pane-heading h2 { margin: 6px 0 0; font: 700 18px "Manrope", sans-serif; letter-spacing: -.5px; }
-      .markdown-badge, .preview-live { display: inline-flex; align-items: center; gap: 7px; padding: 7px 9px; border-radius: 7px; background: color-mix(in srgb, var(--green) 8%, var(--paper)); color: var(--green); font-size: 8px; font-weight: 700; letter-spacing: 1px; white-space: nowrap; }
-      .preview-live span { width: 6px; height: 6px; }
-      .note-editor { display: block; width: 100%; min-height: 360px; resize: vertical; padding: 20px; border: 1px solid var(--line); border-radius: 15px; outline: 0; background: color-mix(in srgb, var(--canvas) 60%, var(--paper)); color: var(--ink); font: 13px/1.85 ui-monospace, SFMono-Regular, Consolas, monospace; transition: border-color .2s, box-shadow .2s; }
+      .note-editor-badge { display: inline-flex; align-items: center; gap: 7px; padding: 7px 9px; border-radius: 7px; background: color-mix(in srgb, var(--green) 8%, var(--paper)); color: var(--green); font-size: 8px; font-weight: 700; letter-spacing: 1px; white-space: nowrap; }
+      .note-format-toolbar { display: flex; align-items: center; gap: 7px; margin-bottom: 12px; padding: 7px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--canvas) 55%, var(--paper)); }
+      .note-format-button { display: grid; place-items: center; width: 34px; height: 32px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--ink); font-size: 14px; }
+      .note-format-button:hover, .note-format-button:focus-visible { border-color: var(--line); background: var(--paper); color: var(--green); }
+      .note-format-divider { width: 1px; height: 20px; margin: 0 3px; background: var(--line); }
+      .note-editor { display: block; width: 100%; min-height: 460px; padding: 20px; border: 1px solid var(--line); border-radius: 15px; outline: 0; background: color-mix(in srgb, var(--canvas) 60%, var(--paper)); color: var(--ink); font: 15px/1.85 "DM Sans", sans-serif; overflow-wrap: anywhere; transition: border-color .2s, box-shadow .2s; }
+      .note-editor:empty::before { color: color-mix(in srgb, var(--muted) 75%, transparent); content: attr(data-placeholder); pointer-events: none; }
       .note-editor:focus { border-color: color-mix(in srgb, var(--green) 50%, var(--line)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 9%, transparent); }
-      .note-editor::placeholder { color: color-mix(in srgb, var(--muted) 75%, transparent); }
+      .note-editor h1, .note-editor h2, .note-editor h3 { font-family: "Manrope", sans-serif; line-height: 1.3; }
+      .note-editor blockquote { margin-left: 0; padding-left: 14px; border-left: 3px solid var(--green); color: var(--muted); }
+      .note-editor ul, .note-editor ol { padding-left: 24px; }
+      .note-editor:focus-visible { outline: none; }
       .note-editor-footer { display: flex; justify-content: space-between; gap: 12px; padding: 11px 2px 0; color: var(--muted); font-size: 10px; }
-      .markdown-preview { min-height: 360px; padding: 8px 3px; color: var(--ink); font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
-      .markdown-preview h1, .markdown-preview h2, .markdown-preview h3 { margin: 0 0 12px; font-family: "Manrope", sans-serif; letter-spacing: -.7px; }
-      .markdown-preview h1 { font-size: 27px; }
-      .markdown-preview h2 { font-size: 22px; }
-      .markdown-preview h3 { font-size: 17px; }
-      .markdown-preview p { margin: 0 0 14px; }
-      .markdown-preview ul, .markdown-preview ol { display: grid; gap: 6px; margin: 0 0 16px; padding-left: 22px; }
-      .markdown-preview li::marker { color: var(--green); }
-      .markdown-preview blockquote { margin: 0 0 15px; padding: 4px 0 4px 14px; border-left: 3px solid var(--green); color: var(--muted); }
-      .markdown-preview a { color: var(--green); text-decoration-thickness: 1px; text-underline-offset: 3px; }
-      .markdown-preview code { padding: 2px 5px; border-radius: 5px; background: color-mix(in srgb, var(--green) 9%, var(--paper)); font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; }
-      .markdown-preview pre { overflow-x: auto; margin: 0 0 15px; padding: 14px; border-radius: 12px; background: color-mix(in srgb, var(--green) 7%, var(--paper)); }
-      .markdown-preview pre code { padding: 0; background: none; }
-      .markdown-preview hr { margin: 18px 0; border: 0; border-top: 1px solid var(--line); }
-      .markdown-empty { color: var(--muted); font-style: italic; }
       .notes-privacy { display: flex; align-items: center; gap: 8px; margin: 0; padding: 15px 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
       .notes-privacy span { color: var(--green); }
       @keyframes pulse { 50% { opacity: .4; } }
@@ -408,10 +408,8 @@
         .notes-toolbar { align-items: stretch; flex-direction: column; }
         .note-title-field { width: 100%; }
         .notes-downloads .button { flex: 1; }
-        .notes-editor-grid { grid-template-columns: 1fr; }
         .note-pane { min-height: 0; padding: 20px; }
-        .note-preview-pane { min-height: 260px; }
-        .note-editor, .markdown-preview { min-height: 280px; }
+        .note-editor { min-height: 300px; }
       }
       @media (max-width: 430px) {
         .topbar-right { gap: 9px; }
@@ -434,9 +432,14 @@
         .timetable { min-width: 0; }
         .day-headings, .calendar-body { grid-template-columns: 14mm repeat(var(--visible-day-count, 5), minmax(0, 1fr)); }
         .day-heading { padding: 6px 2px; color: #555; font-size: 8pt; }
-        .time-column, .day-column { height: 156mm; }
-        .time-label { height: 13mm; top: -2mm; padding-right: 2mm; color: #555; font-size: 7pt; }
-        .day-column { background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(13mm - 1px), #ddd calc(13mm - 1px), #ddd 13mm); }
+        :root { --hour-height: 13mm; --minute-height: .216667mm; }
+        .time-column, .day-column { height: calc(12 * var(--hour-height)); }
+        .time-label { height: var(--hour-height); top: -2mm; padding-right: 2mm; color: #555; font-size: 7pt; }
+        .day-column {
+          background-image:
+            repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--hour-height) - 1px), #ddd calc(var(--hour-height) - 1px), #ddd var(--hour-height)),
+            repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--hour-height) / 4 - 1px), #eee calc(var(--hour-height) / 4 - 1px), #eee calc(var(--hour-height) / 4));
+        }
         .course-card { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
         .day-heading.today strong { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
       }
