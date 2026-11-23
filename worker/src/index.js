@@ -130,9 +130,7 @@ export default {
         method: "POST",
         headers: {
           Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://tzenyuan.github.io/weekwise-timetable/",
-          "X-Title": "Weekwise AI"
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           model: env.OPENROUTER_MODEL || "openai/gpt-4o-mini",
@@ -143,14 +141,42 @@ export default {
             },
             ...messages
           ],
-          max_tokens: 700,
-          temperature: 0.7
+          max_tokens: 700
         }),
         signal: controller.signal
       });
 
       if (!response.ok) {
-        return jsonResponse({ error: "The AI service could not answer right now. Please try again." }, 502, headers);
+        const errorBody = await response.text();
+        let upstreamError = null;
+        try {
+          upstreamError = JSON.parse(errorBody);
+        } catch {
+          // Keep the bounded plain-text provider error available in Worker logs.
+        }
+        const providerMessage = typeof upstreamError?.error?.message === "string"
+          ? upstreamError.error.message.slice(0, 240)
+          : errorBody.slice(0, 240);
+        console.error("OpenRouter request failed.", {
+          status: response.status,
+          code: upstreamError?.error?.code || "unknown",
+          contentType: response.headers.get("content-type"),
+          server: response.headers.get("server"),
+          requestId: response.headers.get("x-request-id"),
+          message: providerMessage.replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
+        });
+        const userMessage = response.status === 401 || response.status === 403
+          ? "OpenRouter rejected the API key. Replace the OPENROUTER_API_KEY Worker secret with a valid key."
+          : response.status === 402
+            ? "The OpenRouter account needs credits or billing enabled."
+            : response.status === 404
+              ? "The configured OpenRouter model is unavailable. Check OPENROUTER_MODEL."
+              : response.status === 429
+                ? "OpenRouter is rate-limiting requests. Please wait and try again."
+                : response.status === 400
+                  ? "OpenRouter rejected the request. Check the Worker model setting and OpenRouter account access."
+                  : "The AI service could not answer right now. Please try again.";
+        return jsonResponse({ error: userMessage }, 502, headers);
       }
       const result = await response.json();
       const reply = replyText(result?.choices?.[0]?.message?.content);
