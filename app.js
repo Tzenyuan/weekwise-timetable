@@ -38,6 +38,14 @@
         const notesSaveStatus = document.getElementById("notes-save-status");
         const notesSaveLabel = document.getElementById("notes-save-label");
         const pomodoroChimeToggle = document.getElementById("pomodoro-chime");
+        const aiChatWidget = document.getElementById("ai-chat-widget");
+        const aiChatToggle = document.getElementById("ai-chat-toggle");
+        const aiChatMessagesElement = document.getElementById("ai-chat-messages");
+        const aiChatSettingsForm = document.getElementById("ai-chat-settings-form");
+        const aiChatEndpointInput = document.getElementById("ai-chat-endpoint");
+        const aiChatForm = document.getElementById("ai-chat-form");
+        const aiChatInput = document.getElementById("ai-chat-input");
+        const aiChatStatus = document.getElementById("ai-chat-status");
         let courses = loadCourses();
         let editingId = null;
         let toastTimer;
@@ -52,6 +60,8 @@
         let timerInterval = null;
         let noteSaveTimer = null;
         let audioContext = null;
+        let aiChatHistory = [];
+        let aiChatPending = false;
         const savedTheme = readPreference("weekwise-theme-v1");
         const weekendPreference = readPreference(weekendStorageKey);
         const semesterSettings = loadSemesterSettings();
@@ -538,6 +548,88 @@
           clearTimeout(toastTimer);
           toastTimer = setTimeout(() => toast.classList.remove("visible"), 2500);
         }
+        function normalizeAiChatEndpoint(value) {
+          try {
+            const endpoint = new URL(value);
+            const localDevelopment = endpoint.protocol === "http:" &&
+              ["localhost", "127.0.0.1"].includes(endpoint.hostname);
+            if ((endpoint.protocol !== "https:" && !localDevelopment) || endpoint.username || endpoint.password ||
+              endpoint.search || endpoint.hash || !endpoint.pathname.endsWith("/api/chat")) return "";
+            return endpoint.href.replace(/\/$/, "");
+          } catch {
+            return "";
+          }
+        }
+        function updateAiChatConnection() {
+          const endpoint = normalizeAiChatEndpoint(readPreference("weekwise-ai-endpoint-v1") || "");
+          aiChatSettingsForm.hidden = Boolean(endpoint);
+          aiChatForm.hidden = !endpoint;
+          aiChatStatus.textContent = endpoint
+            ? "Connected. Avoid sharing sensitive information."
+            : "Connect your Cloudflare Worker to start chatting.";
+          if (endpoint) aiChatEndpointInput.value = endpoint;
+        }
+        function appendAiChatMessage(role, content, className = "") {
+          const message = document.createElement("p");
+          message.className = `ai-chat-message ai-chat-message-${role}${className ? ` ${className}` : ""}`;
+          message.textContent = content;
+          aiChatMessagesElement.appendChild(message);
+          aiChatMessagesElement.scrollTop = aiChatMessagesElement.scrollHeight;
+          return message;
+        }
+        async function sendAiChatMessage(event) {
+          event.preventDefault();
+          const content = aiChatInput.value.trim();
+          const endpoint = normalizeAiChatEndpoint(readPreference("weekwise-ai-endpoint-v1") || "");
+          if (!content || !endpoint || aiChatPending) return;
+          aiChatHistory.push({ role: "user", content });
+          appendAiChatMessage("user", content);
+          aiChatInput.value = "";
+          aiChatPending = true;
+          aiChatForm.querySelector("button[type='submit']").disabled = true;
+          const pendingMessage = appendAiChatMessage("assistant", "Thinking…", "is-pending");
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 45000);
+          try {
+            const response = await fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ messages: aiChatHistory.slice(-12).filter((message, index, history) =>
+                index !== 0 || message.role !== "assistant"
+              ) }),
+              signal: controller.signal
+            });
+            const result = await response.json().catch(() => null);
+            if (!response.ok) {
+              const message = response.status === 429
+                ? "The chat is busy right now. Please try again in a minute."
+                : result?.error || "I couldn't get a reply. Please try again.";
+              throw new Error(message);
+            }
+            if (typeof result?.reply !== "string" || !result.reply.trim()) {
+              throw new Error("The AI service returned an empty reply. Please try again.");
+            }
+            pendingMessage.remove();
+            aiChatHistory.push({ role: "assistant", content: result.reply });
+            appendAiChatMessage("assistant", result.reply);
+            aiChatStatus.textContent = "Connected. Avoid sharing sensitive information.";
+          } catch (chatError) {
+            console.error("Weekwise AI request failed.", chatError);
+            if (aiChatHistory.at(-1)?.role === "user" && aiChatHistory.at(-1).content === content) {
+              aiChatHistory.pop();
+            }
+            pendingMessage.textContent = chatError.name === "AbortError"
+              ? "That took too long. Please try again."
+              : chatError.message || "I couldn't connect. Check your Worker URL and try again.";
+            pendingMessage.classList.add("has-error");
+            aiChatStatus.textContent = "Message not sent. Check the connection or try again.";
+          } finally {
+            clearTimeout(timeout);
+            aiChatPending = false;
+            aiChatForm.querySelector("button[type='submit']").disabled = false;
+            aiChatInput.focus();
+          }
+        }
         function showPage(page) {
           const pages = {
             planner: ["planner-page", "planner-tab", "#timetable"],
@@ -956,6 +1048,70 @@
         });
         document.getElementById("download-txt-button").addEventListener("click", () => downloadNote("txt"));
         document.getElementById("download-md-button").addEventListener("click", () => downloadNote("md"));
+        aiChatToggle.addEventListener("click", () => {
+          const opening = aiChatWidget.hidden;
+          aiChatWidget.hidden = !opening;
+          aiChatToggle.setAttribute("aria-expanded", String(opening));
+          if (opening) (aiChatSettingsForm.hidden ? aiChatInput : aiChatEndpointInput).focus();
+        });
+        document.getElementById("ai-chat-close").addEventListener("click", () => {
+          aiChatWidget.hidden = true;
+          aiChatToggle.setAttribute("aria-expanded", "false");
+          aiChatToggle.focus();
+        });
+        document.getElementById("ai-chat-settings-toggle").addEventListener("click", () => {
+          if (!normalizeAiChatEndpoint(readPreference("weekwise-ai-endpoint-v1") || "")) {
+            aiChatSettingsForm.hidden = false;
+            aiChatEndpointInput.focus();
+            return;
+          }
+          aiChatSettingsForm.hidden = !aiChatSettingsForm.hidden;
+          if (!aiChatSettingsForm.hidden) aiChatEndpointInput.focus();
+        });
+        aiChatSettingsForm.addEventListener("submit", event => {
+          event.preventDefault();
+          const endpoint = normalizeAiChatEndpoint(aiChatEndpointInput.value.trim());
+          if (!endpoint) {
+            aiChatStatus.textContent = "Enter a secure HTTPS Worker URL ending in /api/chat.";
+            aiChatEndpointInput.focus();
+            return;
+          }
+          try {
+            localStorage.setItem("weekwise-ai-endpoint-v1", endpoint);
+            aiChatHistory = [];
+            aiChatMessagesElement.replaceChildren();
+            appendAiChatMessage("assistant", "Connected! Ask me anything.");
+            updateAiChatConnection();
+            document.getElementById("ai-chat-disconnect").hidden = false;
+            aiChatInput.focus();
+          } catch (storageError) {
+            console.error("Could not save the Weekwise AI endpoint.", storageError);
+            aiChatStatus.textContent = "Could not save the connection in this browser.";
+          }
+        });
+        document.getElementById("ai-chat-disconnect").addEventListener("click", () => {
+          try {
+            localStorage.removeItem("weekwise-ai-endpoint-v1");
+            aiChatHistory = [];
+            aiChatMessagesElement.replaceChildren();
+            appendAiChatMessage("assistant", "Hi! Ask me anything—from a quick study question to a general topic.");
+            aiChatSettingsForm.hidden = false;
+            aiChatEndpointInput.value = "";
+            document.getElementById("ai-chat-disconnect").hidden = true;
+            updateAiChatConnection();
+            aiChatEndpointInput.focus();
+          } catch (storageError) {
+            console.error("Could not disconnect the Weekwise AI endpoint.", storageError);
+            aiChatStatus.textContent = "Could not update the connection in this browser.";
+          }
+        });
+        aiChatForm.addEventListener("submit", sendAiChatMessage);
+        aiChatInput.addEventListener("keydown", event => {
+          if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault();
+            aiChatForm.requestSubmit();
+          }
+        });
         document.getElementById("exam-form").addEventListener("submit", event => {
           event.preventDefault();
           const name = document.getElementById("exam-name").value.trim();
@@ -1080,6 +1236,8 @@
         renderTodos();
         renderPomodoro();
         renderNoteWordCount();
+        updateAiChatConnection();
+        document.getElementById("ai-chat-disconnect").hidden = !normalizeAiChatEndpoint(readPreference("weekwise-ai-endpoint-v1") || "");
         showPage(({ "#study-hub": "study", "#notes": "notes" })[window.location.hash] || "planner");
         setInterval(renderExams, 60000);
         setInterval(renderSemesterProgress, 3600000);
